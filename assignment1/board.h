@@ -21,10 +21,6 @@
 #define COLOR_HOLE      "\x1b[2;34m"    /* blue */
 #define COLOR_PEG       "\x1b[1;37m"    /* white */
 
-struct position {
-        int x, y; 
-};
-
 enum cell_contents {
 	INVALID, HOLE, PEG
 };
