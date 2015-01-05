@@ -12,7 +12,12 @@
 #include <stdio.h>
 #include "menu.h"
 
-void printMenu(void) {
-   printf("PEG SOLITIARE\n");
+void printMenu(struct menu *menu) {
+   int i;
+
+   printf("%s", menu->title);
+   for (i = 0; i < menu->numOptions; ++i) {
+      printf("%s", menu->options[i]);
+   }
 }
 

@@ -12,7 +12,10 @@
 #ifndef SOLITAIRE_H 
 #define SOLITAIRE_H
 
-/* delete this comment and create any type declarations or function
- * prototypes that you might need here */
+struct menu {
+   char* title[];
+   char* options[][];
+   int numOptions;
+}
 
 #endif

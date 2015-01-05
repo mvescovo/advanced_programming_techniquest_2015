@@ -9,5 +9,5 @@
  * Based on 2014 code by Paul Miller and Virginia King
  **********************************************************************/
 
-/* function prototypes for the menu module */
+/* public function prototypes for the menu module */
 void printMenu();

@@ -9,4 +9,7 @@
  * Based on 2014 code by Paul Miller and Virginia King
  **********************************************************************/
 
+void validateInput(inputType) {
+   ;
+}
 

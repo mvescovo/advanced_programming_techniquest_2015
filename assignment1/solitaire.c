@@ -9,14 +9,17 @@
  * Based on 2014 code by Paul Miller and Virginia King
  **********************************************************************/
 
-#include "solitaire.h"
 #include <stdlib.h>
+#include "solitaire.h"
+#include "menu.h"
 
 int main(int argc, char *argv[])
 {
-    printMenu();
+   /* program control gets turned over to the menu module until the user quits
+    * */
+   printMenu();
     
-	return EXIT_SUCCESS;
+   return EXIT_SUCCESS;
 }
 
 
