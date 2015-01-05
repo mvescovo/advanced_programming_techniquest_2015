@@ -12,11 +12,15 @@
 #ifndef GAME_H 
 #define GAME_H
 
+#include "utility.h"
 #include "board.h"
 
+#if 0 /*comment this out because it's declared twice. waiting to see if this is
+        ok*/
 struct position {
 	int x, y;
 };
+#endif
 
 struct move {
 	struct position start, end;
@@ -24,7 +28,7 @@ struct move {
 
 enum move_result
 {
-	QUIT_GAME, SUCCESSFUL_MOVE;
+	QUIT_GAME, SUCCESSFUL_MOVE
 };
 
 /* Requirement 3 - controls the flow of play in the game */

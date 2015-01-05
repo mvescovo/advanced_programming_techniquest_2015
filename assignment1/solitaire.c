@@ -10,9 +10,12 @@
  **********************************************************************/
 
 #include "solitaire.h"
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
+    printMenu();
+    
 	return EXIT_SUCCESS;
 }
 
