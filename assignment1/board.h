@@ -21,9 +21,9 @@
 #define COLOR_HOLE      "\x1b[2;34m"    /* blue */
 #define COLOR_PEG       "\x1b[1;37m"    /* white */
 
-enum cell_contents {
+typedef enum cell_contents {
 	INVALID, HOLE, PEG
-};
+} CELL_CONTENTS;
 
 /* The initial game board - this is an example of the occasional
  * exception to the rule against global variables. Be aware that

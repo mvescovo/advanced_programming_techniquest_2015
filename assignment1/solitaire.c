@@ -15,6 +15,7 @@
 #include "solitaire.h"
 #include "utility.h"
 #include "game.h"
+#include "board.h"
 
 #define TITLE_LEN 20
 #define NUM_OPT 3
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
    MENU menu;
    int selection;
    BOOLEAN quit = FALSE;
+   CELL_CONTENTS gameBoard[BOARD_HEIGHT][BOARD_WIDTH];
    
    /* initialise and print menu */
    initMenu(&menu);
@@ -49,6 +51,7 @@ int main(int argc, char *argv[])
 
       switch (selection) {
          case 1:
+            init_board(gameBoard);
             play_game();
             break;
          case 2:
