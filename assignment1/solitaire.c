@@ -21,6 +21,7 @@
 #define OPT_LEN 30
 #define MENU_INPUT_LEN 1
 #define EXTRA_CHARS 2
+#define NUM_RULES_LINES 15
 
 typedef struct menu {
    char title[TITLE_LEN];
@@ -113,7 +114,27 @@ int getSelection(void) {
 }
 
 void printRules(void) {
+   int i;
+   char* rules[NUM_RULES_LINES] = {
+      "--------------------------------------------------------------------",
+      "The rules of peg solitaire",
+      "--------------------------------------------------------------------\n",
+      "Pegs are represented by an 'o'. Holes are represented by a '.'. The ",
+      "game starts with pegs in every square except the middle.\n",
+      "The only valid move in Peg Solitaire is to jump a peg over an ",
+      "orthogonally adjacent peg (up, down, left, or right, not diagonal) ",
+      "into an empty hole. So in this starting position, valid pegs that can ",
+      "jump are B4, D2, D6, and F4 - all jumping to the centre hole at D4. ",
+      "The peg that is jumped over is then removed from the game leaving ",
+      "another hole.\n",
+      "The object of the game is to remove as many pegs as possible before ",
+      "you are left in a position without any valid movies (i.e. no pegs can ",
+      "make a valid jump). The ideal solution to the puzzle is to be left ",
+      "with a single peg in the centre hole.\n\n"
+   };
 
-   printf("\nThe rules of peg solitaire:\n\n");
+   for (i = 0; i < NUM_RULES_LINES; ++i) {
+      printf("\n%s", rules[i]);
+   }
    getEnter();
 }
