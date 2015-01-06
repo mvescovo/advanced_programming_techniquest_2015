@@ -14,12 +14,13 @@
 #include <string.h>
 #include "solitaire.h"
 #include "utility.h"
+#include "game.h"
 
 #define TITLE_LEN 20
 #define NUM_OPT 3
 #define OPT_LEN 30
-#define MENU_INPUT_LEN 2
-#define EXTRA_CHARS 1
+#define MENU_INPUT_LEN 1
+#define EXTRA_CHARS 2
 
 typedef struct menu {
    char title[TITLE_LEN];
@@ -28,16 +29,38 @@ typedef struct menu {
 
 void initMenu(MENU *menu);
 void printMenu(MENU *menu);
-void getSelection(void);
+int getSelection(void);
+void printRules(void);
 
 int main(int argc, char *argv[])
 {
    MENU menu;
+   int selection;
+   BOOLEAN quit = FALSE;
    
+   /* initialise and print menu */
    initMenu(&menu);
-   printMenu(&menu);
-   getSelection();
+   while (!quit) {
+      printMenu(&menu);
 
+      /* get user selection and call appropriate function */
+      selection = getSelection();
+
+      switch (selection) {
+         case 1:
+            play_game();
+            break;
+         case 2:
+            printRules();
+            break;
+         case 3:
+            printf("\nProgram quit.\n\n");
+            quit = TRUE;
+            break;
+         default:
+            printf("error");
+      }
+   }
    return EXIT_SUCCESS;
 }
 
@@ -60,8 +83,37 @@ void printMenu(MENU *menu) {
    putchar('\n');
 }
 
-void getSelection(void) {
+int getSelection(void) {
    char line[MENU_INPUT_LEN + EXTRA_CHARS];
+   char *end;
+   int selection;
+   BOOLEAN success = FALSE;
+   int i;
+
+   do {
+      /* get input from the user and put it in line */
+      getString(line, MENU_INPUT_LEN, "Enter selection: ");
    
-   fgets(line , MENU_INPUT_LEN, stdin);
+      /* validate input is a menu selection */
+      selection = (int)strtol(line, &end, 10);
+
+      for (i = 1; i <= NUM_OPT; ++i) {
+         if (selection == i) {
+            success = TRUE;
+         }
+      }
+      
+      if (success == FALSE) {
+         printf("Not a valid menu option, ");
+      }
+
+   } while (!success);
+
+   return selection;
+}
+
+void printRules(void) {
+
+   printf("\nThe rules of peg solitaire:\n\n");
+   getEnter();
 }

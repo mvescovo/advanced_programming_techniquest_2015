@@ -19,4 +19,10 @@ typedef enum {
 /* clears residual data from stdin */
 void read_rest_of_line(void);
 
+/* get a string from the user, checking for buffer overflow */
+void getString(char string[], unsigned length, char prompt[]);
+
+/* get an enter press of the keyboard */
+void getEnter(void);
+
 #endif

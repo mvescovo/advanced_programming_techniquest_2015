@@ -10,12 +10,14 @@
  **********************************************************************/
 
 #include "game.h"
+#include <stdio.h>
 
 /* Requirement 3 - controls the flow of play in the game */
 void play_game(void)
 {
 /*	enum cell_contents board[BOARD_WIDTH][BOARD_HEIGHT]; */
 
+   printf("\ngame started\n");
 	/* delete this comment and write your own comments and code here */
 }
 
