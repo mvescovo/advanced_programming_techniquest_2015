@@ -23,7 +23,6 @@
 #define MIN_PEG_LEN 2
 #define MIN_X 'A'
 #define MIN_Y 1
-#define X_OFFSET 65
 #define Y_OFFSET 1
 #define VALID_DISTANCE 2
 #define JUMP_DIST 1

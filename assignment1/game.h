@@ -15,6 +15,8 @@
 #include "board.h"
 #include "utility.h"
 
+#define X_OFFSET 65
+
 struct position {
 	int x, y;
 };
