@@ -31,7 +31,7 @@ void read_rest_of_line(void)
         clearerr(stdin);
 }
 
-void getString(char string[], unsigned length, char prompt[]) {
+BOOLEAN getString(char string[], unsigned length, char prompt[]) {
    char line[LINE_LEN + EXTRA_CHARS];
    BOOLEAN success = FALSE;
 
@@ -40,16 +40,15 @@ void getString(char string[], unsigned length, char prompt[]) {
    do {
       printf("%s", prompt);
       
-      /* read in characters and check something was entered */
+      /* read in characters */
       if (fgets(line , length + EXTRA_CHARS, stdin) == NULL) {
-         printf("\nNo characters entered, ");
-         continue;
+         return FALSE;
       }
 
       /* validate input */
       if (line[strlen(line) - 1] != '\n') {
          /* buffer overflow */
-         printf("Too many characters entered, ");
+         printf("Too many characters entered\n");
          read_rest_of_line();
          continue;
       }
@@ -62,11 +61,23 @@ void getString(char string[], unsigned length, char prompt[]) {
    } while (!success);
 
    strcpy(string, line);
+   return TRUE;
 }
 
 void getEnter(void) {
    char enter[ENTER_LEN + EXTRA_CHARS];
-
-   while (getString(enter, ENTER_LEN, "Press Enter to return to menu."),
-         enter[0] != '\0');
+   BOOLEAN success;
+   
+   do {
+      if (!getString(enter, ENTER_LEN, "Press Enter to return to menu.")) {
+         putchar('\n');
+         success = FALSE;
+      }
+      else if (enter[0] != '\0') {
+         success = FALSE;
+      }
+      else {
+         success = TRUE;
+      }
+   } while (!success);
 }

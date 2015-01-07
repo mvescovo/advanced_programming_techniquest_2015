@@ -33,13 +33,13 @@ void initMenu(MENU *menu);
 void printMenu(MENU *menu);
 int getSelection(void);
 void printRules(void);
+BOOLEAN playAgain(void);
 
 int main(int argc, char *argv[])
 {
    MENU menu;
    int selection;
    BOOLEAN quit = FALSE;
-   CELL_CONTENTS gameBoard[BOARD_HEIGHT][BOARD_WIDTH];
    
    /* initialise and print menu */
    initMenu(&menu);
@@ -51,8 +51,10 @@ int main(int argc, char *argv[])
 
       switch (selection) {
          case 1:
-            init_board(gameBoard);
             play_game();
+            while (playAgain()) {
+               play_game();
+            }
             break;
          case 2:
             printRules();
@@ -96,7 +98,10 @@ int getSelection(void) {
 
    do {
       /* get input from the user and put it in line */
-      getString(line, MENU_INPUT_LEN, "Enter selection: ");
+      if (!getString(line, MENU_INPUT_LEN, "Enter selection: ")) {
+         printf("\nNo characters entered, ");
+         continue;
+      }
    
       /* validate input is a menu selection */
       selection = (int)strtol(line, &end, 10);
@@ -140,4 +145,17 @@ void printRules(void) {
       printf("\n%s", rules[i]);
    }
    getEnter();
+}
+
+BOOLEAN playAgain(void) {
+   char line[MENU_INPUT_LEN + EXTRA_CHARS];
+
+   getString(line, MENU_INPUT_LEN, "Play again? Y/N");
+   
+   if (line[0] == 'y') {
+      return TRUE;
+   }
+   else {
+      return FALSE;
+   }
 }

@@ -9,6 +9,7 @@
  * Based on 2014 code by Paul Miller and Virginia King
  **********************************************************************/
 
+#include <stdio.h>
 #include "board.h"
 
 /* copies the master board to a local copy for each game */
@@ -26,6 +27,13 @@ void init_board(enum cell_contents board[][BOARD_HEIGHT])
 /* display the game board to the screen */
 void display_board(enum cell_contents board[][BOARD_HEIGHT])
 {
-	/* delete this comment and write your own comments and code here */
+   int i, j;
+
+   for (i = 0; i < BOARD_HEIGHT; ++i) {
+      for (j = 0; j < BOARD_WIDTH; ++j) {
+         printf("%d", board[i][j]);
+      }
+      putchar('\n');
+   }
 }
 

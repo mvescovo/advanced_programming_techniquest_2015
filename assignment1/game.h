@@ -19,9 +19,9 @@ struct position {
 	int x, y;
 };
 
-struct move {
+typedef struct move {
 	struct position start, end;
-};
+} MOVE;
 
 enum move_result
 {
