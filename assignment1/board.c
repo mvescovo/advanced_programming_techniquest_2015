@@ -12,8 +12,11 @@
 #include <stdio.h>
 #include "board.h"
 
+void printCell(CELL_CONTENTS);
+void printAxis(void);
+
 /* copies the master board to a local copy for each game */
-void init_board(enum cell_contents board[][BOARD_HEIGHT])
+void init_board(enum cell_contents board[][BOARD_WIDTH])
 {
    int i, j;
 
@@ -25,15 +28,32 @@ void init_board(enum cell_contents board[][BOARD_HEIGHT])
 }
 
 /* display the game board to the screen */
-void display_board(enum cell_contents board[][BOARD_HEIGHT])
+void display_board(enum cell_contents board[][BOARD_WIDTH])
 {
    int i, j;
 
    for (i = 0; i < BOARD_HEIGHT; ++i) {
       for (j = 0; j < BOARD_WIDTH; ++j) {
-         printf("%d", board[i][j]);
+         printCell(board[i][j]);
       }
       putchar('\n');
    }
 }
 
+/* displays an individual cell */
+void printCell(CELL_CONTENTS cell) {
+   switch (cell) {
+      case PEG:
+         printf("o");
+         break;
+      case HOLE:
+         printf(".");
+         break;
+      case INVALID:
+         break;
+   }
+}
+
+void printAxis(void) {
+
+}
