@@ -26,6 +26,7 @@
 #define Y_OFFSET 1
 #define VALID_DISTANCE 2
 #define JUMP_DIST 1
+#define POSSIBLE_MOVES 4
 
 BOOLEAN getMove(MOVE *move);
 BOOLEAN validPeg(char *peg);
@@ -113,8 +114,26 @@ BOOLEAN is_valid_move(struct move curr_move,
 /* Requirement 7 - tests to see whether it is the end of the game */
 BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
 {
-    
-	return FALSE;
+   int i, j, k;
+   MOVE move;
+
+   for (i = 0; i < BOARD_HEIGHT; ++i) {
+      for (j = 0; j < BOARD_WIDTH; ++j) {
+         if (board[i][j] == PEG) {
+            for (k = 0; k < POSSIBLE_MOVES; ++k) {
+               move.start.x = j;
+               move.start.y = i;
+               move.end.x = j + 2;
+               move.end.y = i;
+               
+               if (is_valid_move(move, board)) {
+                  return FALSE;
+               }
+            }
+         }
+      }
+   }
+	return TRUE;
 }
 
 /* Requirement 5 - handle the logic for each individual move */
