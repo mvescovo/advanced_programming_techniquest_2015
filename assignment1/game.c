@@ -30,6 +30,7 @@
 
 BOOLEAN getMove(MOVE *move);
 BOOLEAN validPeg(char *peg);
+void getPossibleMove(MOVE *move, int possMovNum);
 
 /* Requirement 3 - controls the flow of play in the game */
 void play_game(void)
@@ -118,14 +119,15 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
    MOVE move;
 
    for (i = 0; i < BOARD_HEIGHT; ++i) {
+      move.start.y = i;
+      
       for (j = 0; j < BOARD_WIDTH; ++j) {
+         move.start.x = j;
+         
          if (board[i][j] == PEG) {
             for (k = 0; k < POSSIBLE_MOVES; ++k) {
-               move.start.x = j;
-               move.start.y = i;
-               move.end.x = j + 2;
-               move.end.y = i;
-               
+               getPossibleMove(&move, k);
+
                if (is_valid_move(move, board)) {
                   return FALSE;
                }
@@ -136,6 +138,26 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
 	return TRUE;
 }
 
+void getPossibleMove(MOVE *move, int possMovNum) {
+   switch(possMovNum) {
+      case 0:
+         move->end.x = move->start.x;
+         move->end.y = move->start.y + 2;
+         break;
+      case 1:
+         move->end.x = move->start.x + 2;
+         move->end.y = move->start.y;
+      case 2:
+         move->end.x = move->start.x;
+         move->end.y = move->start.y - 2;
+      case 3:
+         move->end.x = move->start.x - 2;
+         move->end.y = move->start.y;
+      default:
+         printf("error");
+   }
+}
+    
 /* Requirement 5 - handle the logic for each individual move */
 enum move_result player_move(enum cell_contents board[][BOARD_HEIGHT])
 {

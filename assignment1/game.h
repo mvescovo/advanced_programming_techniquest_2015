@@ -17,9 +17,9 @@
 
 #define X_OFFSET 65
 
-struct position {
+typedef struct position {
 	int x, y;
-};
+} POSITION;
 
 typedef struct move {
 	struct position start, end;
