@@ -98,13 +98,6 @@ void display_board(enum cell_contents board[][BOARD_WIDTH])
                }
                else {
                   printCell(board, i, j - LABEL_LEN);
-#if 0
-                  if ((j != YAXIS_POS) && (j != YAXIS_POS + 1) &&
-                        (board[i][j - LABEL_LEN - 1] != INVALID) &&
-                        (board[i][j - LABEL_LEN + 1] == INVALID)) {
-                     printf("|");
-                  }
-#endif
                }
             }
             putchar('\n');

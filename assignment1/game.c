@@ -113,7 +113,7 @@ BOOLEAN is_valid_move(struct move curr_move,
 /* Requirement 7 - tests to see whether it is the end of the game */
 BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
 {
-   /*  */
+    
 	return FALSE;
 }
 
@@ -165,7 +165,6 @@ enum move_result player_move(enum cell_contents board[][BOARD_HEIGHT])
                   JUMP_DIST] = HOLE;
             }
          }
-
       }
    }
 	return SUCCESSFUL_MOVE;
