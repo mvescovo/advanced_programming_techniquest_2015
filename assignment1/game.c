@@ -119,10 +119,10 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
    MOVE move;
 
    for (i = 0; i < BOARD_HEIGHT; ++i) {
-      move.start.y = i;
+      move.start.y = i + Y_OFFSET;
       
       for (j = 0; j < BOARD_WIDTH; ++j) {
-         move.start.x = j;
+         move.start.x = j + X_OFFSET;
          
          if (board[i][j] == PEG) {
             for (k = 0; k < POSSIBLE_MOVES; ++k) {
@@ -141,21 +141,26 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
 void getPossibleMove(MOVE *move, int possMovNum) {
    switch(possMovNum) {
       case 0:
-         move->end.x = move->start.x;
-         move->end.y = move->start.y + 2;
+         move->end.x = move->start.x + X_OFFSET;
+         move->end.y = move->start.y + Y_OFFSET + 2;
          break;
       case 1:
-         move->end.x = move->start.x + 2;
-         move->end.y = move->start.y;
+         move->end.x = move->start.x + X_OFFSET + 2;
+         move->end.y = move->start.y + Y_OFFSET;
+         break;
       case 2:
-         move->end.x = move->start.x;
-         move->end.y = move->start.y - 2;
+         move->end.x = move->start.x + X_OFFSET;
+         move->end.y = move->start.y + Y_OFFSET - 2;
+         break;
       case 3:
-         move->end.x = move->start.x - 2;
-         move->end.y = move->start.y;
+         move->end.x = move->start.x + X_OFFSET - 2;
+         move->end.y = move->start.y + Y_OFFSET;
+         break;
       default:
          printf("error");
    }
+   printf("\nmove: %c %d %c %d\n", move->start.x, move->start.y, move->end.x,
+         move->end.y);
 }
     
 /* Requirement 5 - handle the logic for each individual move */
