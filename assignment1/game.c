@@ -31,6 +31,7 @@
 BOOLEAN getMove(MOVE *move);
 BOOLEAN validPeg(char *peg);
 void getPossibleMove(MOVE *move, int possMovNum);
+int getPegsLeft(CELL_CONTENTS board[][BOARD_WIDTH]);
 
 /* Requirement 3 - controls the flow of play in the game */
 void play_game(void)
@@ -58,17 +59,39 @@ void play_game(void)
 
    /* print the result */
    if (quit == TRUE) {
-      printf("\nGame quit with x pegs left.\n");
+      printf("\nGame quit with %d pegs left.\n", getPegsLeft(board));
    }
    else {
-      printf("\nThere are no more moves with ? pegs left.\n");
+      printf("\nThere are no more moves with %d pegs left.\n",
+            getPegsLeft(board));
    }
 }
 
 /* Requirement 6 - tests to see whether a move is valid or not */
 BOOLEAN is_valid_move(struct move curr_move,
-        enum cell_contents board[][BOARD_HEIGHT])
+        enum cell_contents board[][BOARD_WIDTH])
 {
+   /* check all coordinates are not out of bounds of the board array */
+   if ((curr_move.start.x - X_OFFSET < 0) ||
+         (curr_move.start.x - X_OFFSET > BOARD_HEIGHT)) {
+      return FALSE;
+   }
+   
+   if ((curr_move.start.y - Y_OFFSET < 0) ||
+         (curr_move.start.y - Y_OFFSET > BOARD_WIDTH)) {
+      return FALSE;
+   }
+
+   if ((curr_move.end.x - X_OFFSET < 0) ||
+         (curr_move.end.x - X_OFFSET > BOARD_HEIGHT)) {
+      return FALSE;
+   }
+
+   if ((curr_move.end.y - Y_OFFSET < 0) ||
+         (curr_move.end.y - Y_OFFSET > BOARD_WIDTH)) {
+      return FALSE;
+   }
+
    /* check if source peg for the move exists on the board */
    if (board[curr_move.start.y - Y_OFFSET][curr_move.start.x - X_OFFSET] != PEG) {
       printf("There is no peg in %c%d\n", curr_move.start.x, curr_move.start.y);
@@ -83,9 +106,9 @@ BOOLEAN is_valid_move(struct move curr_move,
 
    /* check if destination is orthogonally adjacent to the source peg */
 
-   /* check if source and destination are on the same x axis */
+   /* check if source and destination are on the same y axis */
    if ((curr_move.start.x - X_OFFSET) == (curr_move.end.x - X_OFFSET)){
-      /* check that y axis is exactly VALID_DISTANCE positions away */
+      /* check that x axis is exactly VALID_DISTANCE positions away */
       if (((curr_move.start.y - Y_OFFSET) != 
                (curr_move.end.y - Y_OFFSET + VALID_DISTANCE)) && 
             ((curr_move.start.y - Y_OFFSET) !=
@@ -93,14 +116,27 @@ BOOLEAN is_valid_move(struct move curr_move,
          printf("The destination is not orthogonally adjacent\n");
          return FALSE;
       }
+      /* check there's a peg in the middle of the source and destination */
+      if (curr_move.start.y < curr_move.end.y) {
+         if ((board[curr_move.start.y - Y_OFFSET + JUMP_DIST][curr_move.start.x -
+               X_OFFSET] != PEG)) {
+         printf("There is no peg to jump for the destination same y axis\n");
+         return FALSE;
+         }
+      }
+      else if (board[curr_move.start.y - Y_OFFSET - JUMP_DIST][curr_move.start.x
+               - X_OFFSET] != PEG) {
+            printf("There is no peg to jump for the destination same y axis\n");
+            return FALSE;
+      }
    }
-   /* if source and destination are not on the same x axis then they must be on
-    * the same y axis. check this is true */
+   /* if source and destination are not on the same y axis then they must be on
+    * the same x axis. check this is true */
    else if ((curr_move.start.y - Y_OFFSET) != (curr_move.end.y - Y_OFFSET)) {
       printf("The destination is not orthogonally adjacent\n");
    }
-   /* at this point we know the destination is on the same y axis. check that
-    * the x axis is exactly VALID_DISTANCE positions away */
+   /* at this point we know the destination is on the same x axis. check that
+    * the y axis is exactly VALID_DISTANCE positions away */
    else if (((curr_move.start.x - X_OFFSET) != 
             (curr_move.end.x - X_OFFSET + VALID_DISTANCE)) &&
          ((curr_move.start.x - X_OFFSET) !=
@@ -108,6 +144,24 @@ BOOLEAN is_valid_move(struct move curr_move,
       printf("The destination is not orthogonally adjacent\n");
       return FALSE;
    }
+   /* check there's a peg in the middle of the source and destination */
+   if (curr_move.start.x < curr_move.end.x) {
+      if (board[curr_move.start.y - Y_OFFSET][curr_move.start.x - X_OFFSET +
+            JUMP_DIST] != PEG) {
+         printf("There is no peg to jump for the destination same x axis\n");
+         return FALSE;
+      }
+   }
+   else if (board[curr_move.start.y - Y_OFFSET][curr_move.start.x - X_OFFSET -
+         JUMP_DIST] != PEG) {
+      printf("There is no peg to jump for the destination same x axis\n");
+      printf("\nthe position with no peg: %c%d. the value of this peg: %d\n",
+            curr_move.start.x - X_OFFSET - JUMP_DIST, curr_move.start.y -
+            Y_OFFSET, board[curr_move.start.y - Y_OFFSET][curr_move.start.x -
+            X_OFFSET - JUMP_DIST]);
+      return FALSE;
+   }
+
    /* if we reach here the move is valid */
 	return TRUE;
 }
@@ -129,6 +183,8 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
                getPossibleMove(&move, k);
 
                if (is_valid_move(move, board)) {
+                  printf("\nvalid move: %c%d %c%d\n", move.start.x,
+                        move.start.y, move.end.x, move.end.y);
                   return FALSE;
                }
             }
@@ -141,20 +197,20 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
 void getPossibleMove(MOVE *move, int possMovNum) {
    switch(possMovNum) {
       case 0:
-         move->end.x = move->start.x + X_OFFSET;
-         move->end.y = move->start.y + Y_OFFSET + 2;
+         move->end.x = move->start.x;
+         move->end.y = move->start.y + 2;
          break;
       case 1:
-         move->end.x = move->start.x + X_OFFSET + 2;
-         move->end.y = move->start.y + Y_OFFSET;
+         move->end.x = move->start.x + 2;
+         move->end.y = move->start.y;
          break;
       case 2:
-         move->end.x = move->start.x + X_OFFSET;
-         move->end.y = move->start.y + Y_OFFSET - 2;
+         move->end.x = move->start.x;
+         move->end.y = move->start.y - 2;
          break;
       case 3:
-         move->end.x = move->start.x + X_OFFSET - 2;
-         move->end.y = move->start.y + Y_OFFSET;
+         move->end.x = move->start.x - 2;
+         move->end.y = move->start.y;
          break;
       default:
          printf("error");
@@ -314,4 +370,17 @@ BOOLEAN validPeg(char *peg) {
    printf("\nstartX: %d, startY: %d\n", x, y);
 #endif
    return TRUE;
+}
+
+int getPegsLeft(CELL_CONTENTS board[][BOARD_WIDTH]) {
+   int i, j, numPegs = 0;
+
+   for (i = 0; i < BOARD_HEIGHT; ++i) {
+      for (j = 0; j < BOARD_WIDTH; ++j) {
+         if (board[i][j] == PEG) {
+            ++numPegs;
+         }
+      }
+   }
+   return numPegs;
 }
