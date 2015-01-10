@@ -17,13 +17,15 @@
 #define BOARD_DISPLAY_WIDTH BOARD_WIDTH + LABEL_LEN
 #define BOARD_DISPLAY_HEIGHT BOARD_HEIGHT + LABEL_LEN 
 #define CELL_DISPLAY_WIDTH 4
-#define CELL_DISPLAY_HEIGHT 2
+#define ROW_PRINT_LINES 2
 #define YAXIS_POS 0
-#define AXIS_OFFSET 1
 #define CELL_PADDING 1
 
-void printCell(CELL_CONTENTS board[][BOARD_WIDTH], int x, int y);
-void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int x, int y);
+void printRow(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum);
+void printCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int lineNum, int
+      cellNum);
+void printDataCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
+void printLines(void);
 void printSpaces(void);
 void printYaxis(int row);
 void printXaxis(int column);
@@ -43,10 +45,237 @@ void init_board(enum cell_contents board[][BOARD_WIDTH])
 /* display the game board to the screen */
 void display_board(enum cell_contents board[][BOARD_WIDTH])
 {
-   int i, j, k;
+   int i;
 
    putchar('\n');
+   
+   /* iterate through the entire board including labels */
    for (i = 0; i < BOARD_DISPLAY_HEIGHT; ++i) {
+      printRow(board, i);
+   }
+}
+
+/* print a row - each row in the board has multiple print lines */
+void printRow(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum) {
+   int i, j;
+
+   for (i = 0; i < ROW_PRINT_LINES; ++i) {
+      for (j = 0; j < BOARD_DISPLAY_WIDTH; ++j) {
+         printCell(board, rowNum, i, j);
+      }
+      putchar('\n');
+   }
+}
+
+/* print a cell */
+void printCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int lineNum, int
+      cellNum) {
+   /* check if we're in the first line */
+   if (lineNum == 0) {
+      /* check if we're in the yaxis label column */
+      if (cellNum == 0) {
+         printSpaces();
+      }
+      /* else we're not in the yaxis label column */
+      else
+      {
+         /* check if we need to print lines or spaces */
+         if (board[rowNum][cellNum - LABEL_LEN] != INVALID) {
+            printLines();
+            /* check if we need to end the line with a "+" */
+            if (cellNum == BOARD_DISPLAY_WIDTH - LABEL_LEN) {
+               printf(COLOR_LINES);
+               putchar('+');
+               printf(COLOR_RESET);
+            }
+            else if (board[rowNum][cellNum - LABEL_LEN + 1] == INVALID) {
+               printf(COLOR_LINES);
+               putchar('+');
+               printf(COLOR_RESET);
+            }
+         }
+         else
+         {
+            printSpaces();
+         }
+      }
+   }
+   /* else we're in the second line */
+   else {
+      /* check if we're in the yaxis label column */
+      if ((cellNum == 0) && (rowNum != BOARD_DISPLAY_WIDTH - LABEL_LEN)) {
+         printYaxis(rowNum);
+      }
+      /* check if we're in the xaxis lable row */
+      else if ((cellNum != 0) && (rowNum == BOARD_DISPLAY_HEIGHT - LABEL_LEN)) {
+         printXaxis(cellNum - LABEL_LEN);
+      }
+      /* else we're in the range of the actual "data" cells */
+      else {
+         printDataCell(board, rowNum, cellNum - LABEL_LEN);
+         /* check if we need to end the line with a "|" */
+         if (cellNum == BOARD_DISPLAY_WIDTH - LABEL_LEN) {
+            printf(COLOR_LINES);
+            putchar('|');
+            printf(COLOR_RESET);
+         }
+         else if (board[rowNum][cellNum - LABEL_LEN + 1] == INVALID) {
+            printf(COLOR_LINES);
+            putchar('|');
+            printf(COLOR_RESET);
+         }
+      }
+   }
+}
+
+/* print the contents of a "data" cell (PEG, HOLE, INVALID) */
+void printDataCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, 
+      int cellNum) {
+   int i;
+
+   switch (board[rowNum][cellNum]) {
+      case PEG:
+         printf(COLOR_LINES);
+         printf("|");
+         printf(COLOR_RESET);
+         for (i = 0; i < CELL_PADDING; ++i) {
+            printf(" ");
+         }
+         printf(COLOR_PEG);
+         printf("o");
+         printf(COLOR_RESET);
+         for (i = 0; i < CELL_PADDING; ++i) {
+            printf(" ");
+         }
+         break;
+      case HOLE:
+         printf(COLOR_LINES);
+         printf("|");
+         printf(COLOR_RESET);
+         for (i = 0; i < CELL_PADDING; ++i) {
+            printf(" ");
+         }
+         printf(COLOR_HOLE);
+         printf(".");
+         printf(COLOR_RESET);
+         for (i = 0; i < CELL_PADDING; ++i) {
+            printf(" ");
+         }
+         break;
+      case INVALID:
+         printf(" ");
+         for (i = 0; i < CELL_PADDING; ++i) {
+            printf(" ");
+         }
+         printf(" ");
+         for (i = 0; i < CELL_PADDING; ++i) {
+            printf(" ");
+         }
+         break;
+   }
+}
+
+void printLines(void) {
+   int i;
+
+   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
+      switch (i) {
+         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
+            printf(COLOR_LINES);
+            printf("+");
+            printf(COLOR_RESET);
+            break;
+         default:
+            printf(COLOR_LINES);
+            printf("-");
+            printf(COLOR_RESET);
+      }
+   }
+}
+
+void printSpaces(void) {
+   int i;
+
+   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
+      printf(" ");
+   }
+}
+
+void printYaxis(int row) {
+   int i;
+
+   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
+      switch (i) {
+         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
+            printf(" ");
+            break;
+         case CELL_DISPLAY_WIDTH / 2:
+            printf("%d", row + Y_OFFSET);
+            break;
+         default:
+            printf(" ");
+      }
+   }
+}
+
+void printXaxis(int column) {
+   int i;
+
+   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
+      switch (i) {
+         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
+            printf(" ");
+            break;
+         case CELL_DISPLAY_WIDTH / 2:
+            printf("%c", (char)column + X_OFFSET);
+            break;
+         default:
+            printf(" ");
+      }
+   }
+}
+
+#if 0
+void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum) {
+   int i;
+
+   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
+      switch (i) {
+         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
+            printf(COLOR_LINES);
+            printf("+");
+            printf(COLOR_RESET);
+            break;
+         default:
+            printf(COLOR_LINES);
+            printf("-");
+            printf(COLOR_RESET);
+      }
+   }
+   
+   if (y == BOARD_WIDTH - 1) {
+      printf(COLOR_LINES);
+      printf("+");
+      printf(COLOR_RESET);
+   }
+   else if (x != 0) {
+      if ((board[x][y + 1] == INVALID) && (board[x -1][y+1] == INVALID)) {
+         printf(COLOR_LINES);
+         printf("+");
+         printf(COLOR_RESET);
+      }
+   }
+   else if (x == 0) {
+      if (board[x][y + 1] == INVALID) {
+         printf(COLOR_LINES);
+         printf("+");
+         printf(COLOR_RESET);
+      }
+   }
+}
+#endif
+
+#if 0
       for (k = 0; k < CELL_DISPLAY_HEIGHT; ++k) {
          if (k != CELL_DISPLAY_HEIGHT - LABEL_LEN) {
             for (j = 0; j < BOARD_DISPLAY_WIDTH; ++j) {
@@ -59,22 +288,21 @@ void display_board(enum cell_contents board[][BOARD_WIDTH])
                         printSpaces();
                      }
                      else {
-                        printLines(board, i, j - LABEL_LEN);
+                        printLines(board, i, j - AXIS_OFFSET);
                      }
                   }
                   else {
-                     printLines(board, i, j - LABEL_LEN);
+                     printLines(board, i, j - AXIS_OFFSET);
                   }
                }
-               else if ((j != YAXIS_POS) && 
-                     (i == BOARD_DISPLAY_HEIGHT -
-                     LABEL_LEN)) {
+               else if ((j != YAXIS_POS) && (i == BOARD_DISPLAY_HEIGHT -
+                     AXIS_OFFSET)) {
                   if (board[i - 1][j - AXIS_OFFSET] == INVALID) {
                      printSpaces();
                   }
                   else {
-                     printLines(board, i, j - LABEL_LEN);
-                     if (board[i -1][j] == INVALID) {
+                     printLines(board, i, j - AXIS_OFFSET);
+                     if (board[i -1][j - AXIS_OFFSET] == INVALID) {
                         printf(COLOR_LINES);
                         printf("+");
                         printf(COLOR_RESET);
@@ -90,14 +318,14 @@ void display_board(enum cell_contents board[][BOARD_WIDTH])
          else {
             for (j = 0; j < BOARD_DISPLAY_WIDTH; ++j) {
                if ((j == YAXIS_POS) && (i != BOARD_DISPLAY_HEIGHT - LABEL_LEN)) {
-                  printYaxis(i + AXIS_OFFSET);
+                  printYaxis(i);
                }
                else if ((i == BOARD_DISPLAY_HEIGHT - LABEL_LEN) && 
                      (j != YAXIS_POS)) {
                   printXaxis(j - AXIS_OFFSET);
                }
                else {
-                  printCell(board, i, j - LABEL_LEN);
+                  printCell(board, i, j - AXIS_OFFSET);
                }
             }
             putchar('\n');
@@ -106,7 +334,9 @@ void display_board(enum cell_contents board[][BOARD_WIDTH])
    }
    putchar('\n');
 }
+#endif
 
+#if 0
 /* displays an individual cell */
 void printCell(CELL_CONTENTS board[][BOARD_WIDTH], int x, int y) {
    int i;
@@ -164,83 +394,4 @@ void printCell(CELL_CONTENTS board[][BOARD_WIDTH], int x, int y) {
          break;
    }
 }
-
-void printYaxis(int row) {
-   int i;
-
-   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
-      switch (i) {
-         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
-            printf(" ");
-            break;
-         case CELL_DISPLAY_WIDTH / 2:
-            printf("%d", row);
-            break;
-         default:
-            printf(" ");
-      }
-   }
-}
-
-void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int x, int y) {
-   int i;
-
-   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
-      switch (i) {
-         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
-            printf(COLOR_LINES);
-            printf("+");
-            printf(COLOR_RESET);
-            break;
-         default:
-            printf(COLOR_LINES);
-            printf("-");
-            printf(COLOR_RESET);
-      }
-   }
-   
-   if (y == BOARD_WIDTH - 1) {
-      printf(COLOR_LINES);
-      printf("+");
-      printf(COLOR_RESET);
-   }
-   else if (x != 0) {
-      if ((board[x][y + 1] == INVALID) && (board[x -1][y+1] == INVALID)) {
-         printf(COLOR_LINES);
-         printf("+");
-         printf(COLOR_RESET);
-      }
-   }
-   else if (x == 0) {
-      if (board[x][y + 1] == INVALID) {
-         printf(COLOR_LINES);
-         printf("+");
-         printf(COLOR_RESET);
-      }
-   }
-}
-
-void printSpaces(void) {
-   int i;
-
-   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
-      printf(" ");
-   }
-}
-
-void printXaxis(int column) {
-   int i;
-
-   for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
-      switch (i) {
-         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
-            printf(" ");
-            break;
-         case CELL_DISPLAY_WIDTH / 2:
-            printf("%c", (char)column);
-            break;
-         default:
-            printf(" ");
-      }
-   }
-}
+#endif

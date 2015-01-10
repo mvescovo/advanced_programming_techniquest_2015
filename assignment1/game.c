@@ -23,8 +23,6 @@
 #define MIN_PEG_LEN 2
 #define MIN_X 'A'
 #define MIN_Y 1
-#define X_OFFSET 65 /* subtracts ASCII offset + 1 to align with array */
-#define Y_OFFSET 1 /* subtracts 1 to align with array */
 #define VALID_DISTANCE 2
 #define JUMP_DIST 1
 #define POSSIBLE_MOVES 4
