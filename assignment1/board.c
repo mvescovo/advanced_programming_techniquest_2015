@@ -94,7 +94,7 @@ void display_board(enum cell_contents board[][BOARD_WIDTH])
                }
                else if ((i == BOARD_DISPLAY_HEIGHT - LABEL_LEN) && 
                      (j != YAXIS_POS)) {
-                  printXaxis(j + X_OFFSET - AXIS_OFFSET);
+                  printXaxis(j - AXIS_OFFSET);
                }
                else {
                   printCell(board, i, j - LABEL_LEN);

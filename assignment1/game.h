@@ -15,8 +15,6 @@
 #include "board.h"
 #include "utility.h"
 
-#define X_OFFSET 65
-
 typedef struct position {
 	int x, y;
 } POSITION;
@@ -35,13 +33,13 @@ void play_game(void);
 
 /* Requirement 6 - tests to see whether a move is valid or not */
 BOOLEAN is_valid_move(struct move curr_move,
-	enum cell_contents board[][BOARD_HEIGHT]);
+	enum cell_contents board[][BOARD_WIDTH]);
 
 /* Requirement 7 - tests to see whether it is the end of the game */
-BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT]);
+BOOLEAN is_game_over(enum cell_contents board[][BOARD_WIDTH]);
 
 /* Requirement 5 - handle the logic for each individual move */
-enum move_result player_move(enum cell_contents board[][BOARD_HEIGHT]);
+enum move_result player_move(enum cell_contents board[][BOARD_WIDTH]);
 
 
 #endif
