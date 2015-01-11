@@ -38,13 +38,14 @@ BOOLEAN isPegBetween(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]);
 /* Requirement 3 - controls the flow of play in the game */
 void play_game(void)
 {
-	enum cell_contents board[BOARD_WIDTH][BOARD_HEIGHT];
+	enum cell_contents board[BOARD_HEIGHT][BOARD_WIDTH];
    BOOLEAN quit = FALSE, gameEnd = FALSE, validMoves = TRUE;
    
    init_board(board);
    
    while (!quit && !gameEnd) {
       display_board(board);
+      putchar('\n');
       
       if (!validMoves) {
          gameEnd = TRUE;
@@ -119,7 +120,7 @@ BOOLEAN is_valid_move(struct move curr_move,
 }
 
 /* Requirement 7 - tests to see whether it is the end of the game */
-BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
+BOOLEAN is_game_over(enum cell_contents board[][BOARD_WIDTH])
 {
    int i, j, k;
    MOVE move;
@@ -135,7 +136,7 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_HEIGHT])
                getPossibleMove(&move, k);
 
                if (is_valid_move(move, board, NULL)) {
-#if 0
+#if 1
                   printf("\nvalid move: %c%d %c%d\n", move.start.x + X_OFFSET,
                         move.start.y + Y_OFFSET, move.end.x + X_OFFSET,
                         move.end.y + Y_OFFSET);
@@ -179,7 +180,7 @@ void getPossibleMove(MOVE *move, int possMovNum) {
 }
     
 /* Requirement 5 - handle the logic for each individual move */
-enum move_result player_move(enum cell_contents board[][BOARD_HEIGHT])
+enum move_result player_move(enum cell_contents board[][BOARD_WIDTH])
 {
    MOVE move;
    BOOLEAN validMove = FALSE;
@@ -246,6 +247,7 @@ enum move_result player_move(enum cell_contents board[][BOARD_HEIGHT])
                break;
             case NO_PEG_BETWEEN:
                printf("Invalid move: there's no peg to jump for that move.\n");
+               break;
          }
       }
    }
@@ -426,7 +428,6 @@ BOOLEAN isPegBetween(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
       if (move->start.y < move->end.y) {
          /* check there's a peg between */
          if ((board[move->start.y + JUMP_DIST][move->start.x] != PEG)) {
-            printf("There's no peg to jump for that move\n");
             return FALSE;
          }
       }
@@ -434,7 +435,6 @@ BOOLEAN isPegBetween(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
       else {
          /* check there's a peg between */
          if ((board[move->start.y - JUMP_DIST][move->start.x] != PEG)) {
-            printf("There's no peg to jump for that move\n");
             return FALSE;
          }
       }
@@ -445,7 +445,6 @@ BOOLEAN isPegBetween(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
       if (move->start.x < move->end.x) {
          /* check there's a peg between */
          if (board[move->start.y][move->start.x + JUMP_DIST] != PEG) {
-         printf("There's no peg to jump for that move\n");
          return FALSE;
          }
       }
@@ -453,7 +452,6 @@ BOOLEAN isPegBetween(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
       else {
          /* check there's a peg between */
          if ((board[move->start.y][move->start.x - JUMP_DIST] != PEG)) {
-            printf("There's no peg to jump for that move\n");
             return FALSE;
          }
 #if 0

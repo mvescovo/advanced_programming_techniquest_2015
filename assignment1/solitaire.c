@@ -150,7 +150,7 @@ void printRules(void) {
 BOOLEAN playAgain(void) {
    char line[MENU_INPUT_LEN + EXTRA_CHARS];
 
-   getString(line, MENU_INPUT_LEN, "Play again? Y/N");
+   getString(line, MENU_INPUT_LEN, "Play again? Y/N: ");
    
    if (line[0] == 'y') {
       return TRUE;
