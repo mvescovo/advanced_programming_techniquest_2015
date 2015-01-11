@@ -38,6 +38,17 @@ static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID }
 };
 
+/* this is a different game board */
+static const enum cell_contents master_board2[BOARD_HEIGHT][BOARD_WIDTH] = {
+	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID },
+	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID },
+	{ PEG, INVALID, PEG, PEG, PEG, PEG, INVALID},
+	{ PEG, PEG, PEG, HOLE, PEG, PEG, PEG },
+	{ PEG, PEG, INVALID, PEG, PEG, PEG, PEG },
+	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID },
+	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID }
+};
+
 /* Requirement 2 - copies the contents of master_board to a local
  * board for each game */
 void init_board(enum cell_contents board[][BOARD_WIDTH]);
