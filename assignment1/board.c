@@ -24,6 +24,8 @@
 #define SECOND_LINE 1
 #define DEFAULT_SPACES 3
 #define ALIGN_INDEX 1
+#define YAXIS_PRINT_POS 2
+#define XAXIS_PRINT_POS 2
 
 void printRow(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum);
 void printBoarderLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, 
@@ -154,47 +156,47 @@ void printDataCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
    switch (board[rowNum][cellNum]) {
       case PEG:
          printf(COLOR_LINES);
-         printf("|");
+         putchar('|');
          printf(COLOR_RESET);
          for (i = 0; i < CELL_PADDING; ++i) {
-            printf(" ");
+            putchar(' ');
          }
          printf(COLOR_PEG);
-         printf("o");
+         putchar('o');
          printf(COLOR_RESET);
          for (i = 0; i < CELL_PADDING; ++i) {
-            printf(" ");
+            putchar(' ');
          }
          break;
       case HOLE:
          printf(COLOR_LINES);
-         printf("|");
+         putchar('|');
          printf(COLOR_RESET);
          for (i = 0; i < CELL_PADDING; ++i) {
-            printf(" ");
+            putchar(' ');
          }
          printf(COLOR_HOLE);
-         printf(".");
+         putchar('.');
          printf(COLOR_RESET);
          for (i = 0; i < CELL_PADDING; ++i) {
-            printf(" ");
+            putchar(' ');
          }
          break;
       case INVALID:
-         printf(" ");
+         putchar(' ');
          for (i = 0; i < CELL_PADDING; ++i) {
-            printf(" ");
+            putchar(' ');
          }
-         printf(" ");
+         putchar(' ');
          for (i = 0; i < CELL_PADDING; ++i) {
             /* check if we need to print an extra space */
-            if (cellNum == 0) {
+            if (cellNum == YAXIS_POS) {
                /* we're in the first column of the data cells */
                putchar(' ');
             }
             else if (board[rowNum][cellNum - 1] == INVALID) {
-               /* the cell on the left has closed itself with a "|" */
-               printf(" ");
+               /* the cell on the left didn't close itself with a "|" */
+               putchar(' ');
             }
          }
          break;
@@ -224,14 +226,14 @@ void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
 
    for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
       switch (i) {
-         case CELL_DISPLAY_WIDTH - CELL_DISPLAY_WIDTH:
+         case 0:
             printf(COLOR_LINES);
-            printf("+");
+            putchar('+');
             printf(COLOR_RESET);
             break;
          default:
             printf(COLOR_LINES);
-            printf("-");
+            putchar('-');
             printf(COLOR_RESET);
       }
    }
@@ -346,11 +348,11 @@ void printYaxis(int row) {
 
    for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
       switch (i) {
-         case CELL_DISPLAY_WIDTH / 2:
+         case YAXIS_PRINT_POS:
             printf("%d", row + Y_OFFSET);
             break;
          default:
-            printf(" ");
+            putchar(' ');
       }
    }
 }
@@ -360,11 +362,11 @@ void printXaxis(int column) {
 
    for (i = 0; i < CELL_DISPLAY_WIDTH; ++i) {
       switch (i) {
-         case CELL_DISPLAY_WIDTH / 2:
+         case XAXIS_PRINT_POS:
             printf("%c", (char)column + X_OFFSET);
             break;
          default:
-            printf(" ");
+            putchar(' ');
       }
    }
 }

@@ -31,6 +31,8 @@ void read_rest_of_line(void)
         clearerr(stdin);
 }
 
+/* this function gets a string from the user and checks that it's of the
+ * requested length */
 BOOLEAN getString(char string[], unsigned length, char prompt[]) {
    char line[LINE_LEN + EXTRA_CHARS];
    BOOLEAN success = FALSE;
@@ -48,7 +50,7 @@ BOOLEAN getString(char string[], unsigned length, char prompt[]) {
       /* validate input */
       if (line[strlen(line) - 1] != '\n') {
          /* buffer overflow */
-         printf("Too many characters entered\n");
+         puts("\n2Too many characters entered.");
          read_rest_of_line();
          continue;
       }
@@ -64,6 +66,7 @@ BOOLEAN getString(char string[], unsigned length, char prompt[]) {
    return TRUE;
 }
 
+/* this function gets a press of the enter key from the user */
 void getEnter(void) {
    char enter[ENTER_LEN + EXTRA_CHARS];
    BOOLEAN success;

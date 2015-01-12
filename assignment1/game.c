@@ -19,7 +19,7 @@
 
 #define PLAYER_MOVE_LEN 10
 #define EXTRA_CHARS 2
-#define DELIMS "- ,  "
+#define DELIMS "- ,\t"
 #define MIN_PEG_LEN 2
 #define MIN_X 'A'
 #define MIN_Y 1
@@ -49,10 +49,12 @@ void play_game(void)
       
       if (!validMoves) {
          gameEnd = TRUE;
+         break;
       }
       
       else if (player_move(board) == QUIT_GAME) {
          quit = TRUE;
+         break;
       }
 
       else {
@@ -67,8 +69,20 @@ void play_game(void)
    }
    else {
       display_board(board);
-      printf("\nThere are no more moves with %d pegs left.\n",
-            getPegsLeft(board));
+
+      if (getPegsLeft(board) > 1) {
+         printf("\nThere's no more moves with %d pegs left.\n",
+               getPegsLeft(board));
+      }
+      /* check if the centre of the board is a hole. if so then the last peg
+       * was not in the centre. */
+      else if (board[BOARD_HEIGHT / 2][BOARD_WIDTH / 2] == HOLE) {
+         puts("\nYou finished the puzzle with a single peg left.");
+      }
+      else {
+         puts("\nYou finished the puzzle with a single peg left in the "
+               "centre hole!");
+      }
    }
 }
 
@@ -132,11 +146,13 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_WIDTH])
          move.start.x = j;
          
          if (board[i][j] == PEG) {
+            /* for each cell that has a peg, find the possible moves */
             for (k = 0; k < POSSIBLE_MOVES; ++k) {
                getPossibleMove(&move, k);
-
+               
+               /* if there is a valid move the game is not over */
                if (is_valid_move(move, board, NULL)) {
-#if 1
+#if 0
                   printf("\nvalid move: %c%d %c%d\n", move.start.x + X_OFFSET,
                         move.start.y + Y_OFFSET, move.end.x + X_OFFSET,
                         move.end.y + Y_OFFSET);
@@ -153,6 +169,9 @@ BOOLEAN is_game_over(enum cell_contents board[][BOARD_WIDTH])
 /* get all the moves for a particular coordinate pair (up, down, left, right). 
  * moves can only be 2 positions away from the starting point */
 void getPossibleMove(MOVE *move, int possMovNum) {
+   /* currently this function is only designed to handle 4 moves from 0 - 3. */
+   assert((possMovNum >= 0) && (possMovNum <= 3));
+
    switch(possMovNum) {
       case 0:
          move->end.x = move->start.x;
@@ -169,9 +188,6 @@ void getPossibleMove(MOVE *move, int possMovNum) {
       case 3:
          move->end.x = move->start.x - 2;
          move->end.y = move->start.y;
-         break;
-      default:
-         printf("error");
    }
 #if 0
    printf("\nmove: %c %d %c %d\n", move->start.x + X_OFFSET, move->start.y +
@@ -229,8 +245,8 @@ enum move_result player_move(enum cell_contents board[][BOARD_WIDTH])
       else {
          switch (return_type) {
             case NOT_ON_BOARD:
-               printf("Invalid move: one or more of the pegs are not on the"
-                     "board.\n");
+               puts("Invalid move: one or more of the pegs are not on the "
+                     "board.");
                break;
             case NO_PEG:
                printf("Invalid move: there is no peg in %c%d.\n", 
@@ -246,7 +262,7 @@ enum move_result player_move(enum cell_contents board[][BOARD_WIDTH])
                      move.start.x + X_OFFSET, move.start.y + Y_OFFSET);
                break;
             case NO_PEG_BETWEEN:
-               printf("Invalid move: there's no peg to jump for that move.\n");
+               puts("Invalid move: there's no peg to jump for that move.");
                break;
          }
       }
@@ -275,7 +291,7 @@ BOOLEAN getMove(MOVE *move) {
       token = strtok(line, DELIMS);
 
       if (token == NULL) {
-         printf("Nothing entered\n");
+         puts("Nothing entered.");
       }
       else {
          /* validate source peg */
@@ -287,7 +303,7 @@ BOOLEAN getMove(MOVE *move) {
             token = strtok(NULL, DELIMS);
 
             if (token == NULL) {
-               printf("Missing destination coordinates\n");
+               puts("Missing destination coordinates.");
             }
             else {
                /* validate destination peg */
@@ -313,9 +329,6 @@ BOOLEAN getMove(MOVE *move) {
 
 /* check that a peg is valid for the current board */
 BOOLEAN validPeg(const char *peg) {
-#if 0
-   int x, y;
-#endif
    char *end;
 
    /* check there is both an X and Y coordinate */
@@ -323,17 +336,6 @@ BOOLEAN validPeg(const char *peg) {
       printf("Invalid coordinate pair: %s\n", peg);
       return FALSE;
    }
-#if 0
-   x = toupper(peg[0]);
-#endif
-
-#if 0
-   /* check X coordinate is in range for the board */
-   if ((x < MIN_X) || (x > (MIN_X + BOARD_WIDTH - 1))) {
-      printf("X coordinate out of range for this board: %c\n", peg[0]);
-      return FALSE;
-   }
-#endif
 
    /* check Y coordinate is a number */
    strtol(peg + 1, &end, 10);
@@ -342,13 +344,7 @@ BOOLEAN validPeg(const char *peg) {
       printf("Invalid Y coordinate: %s\n", peg + 1);
       return FALSE;
    }
-#if 0
-   /* check Y coordinate is in range for the board */
-   if ((y < MIN_Y) || (y > (MIN_Y + BOARD_WIDTH - 1))) {
-      printf("Y coordinate out of range for this board: %s\n", peg + 1);
-      return FALSE;
-   }
-#endif
+
    /* check there are no extra characters after y coordinate and that there is a
     * delimiter between the start and end coordinate pairs */
    if (*end != '\0') {
@@ -373,22 +369,22 @@ int getPegsLeft(CELL_CONTENTS board[][BOARD_WIDTH]) {
 
 /* check coordinates are not out of bounds of the board array */
 BOOLEAN isOutOfBounds(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
-   if ((move->start.x < 0) || (move->start.x > BOARD_WIDTH)) {
+   if ((move->start.x < 0) || (move->start.x > BOARD_WIDTH - 1)) {
       return TRUE;
    }
    
-   if ((move->start.y < 0) || (move->start.y > BOARD_HEIGHT)) {
+   if ((move->start.y < 0) || (move->start.y > BOARD_HEIGHT - 1)) {
       return TRUE;
    }
 
-   if ((move->end.x < 0) || (move->end.x > BOARD_WIDTH)) {
+   if ((move->end.x < 0) || (move->end.x > BOARD_WIDTH - 1)) {
       return TRUE;
    }
 
-   if ((move->end.y < 0) || (move->end.y > BOARD_HEIGHT)) {
+   if ((move->end.y < 0) || (move->end.y > BOARD_HEIGHT - 1)) {
       return TRUE;
    }
-
+   
    return FALSE;
 }
 
@@ -399,7 +395,6 @@ BOOLEAN isOrthAdj(MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
       /* check that x axis is exactly VALID_DISTANCE positions away */
       if (((move->start.y) != (move->end.y + VALID_DISTANCE)) && 
          ((move->start.y) != (move->end.y - VALID_DISTANCE))) {
-         printf("The destination is not orthogonally adjacent\n");
          return FALSE;
       }
    }
@@ -408,12 +403,10 @@ BOOLEAN isOrthAdj(MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
       /* check that y axis is exactly VALID_DISTANCE positions away */
       if (((move->start.x) != (move->end.x + VALID_DISTANCE)) &&
          ((move->start.x) != (move->end.x - VALID_DISTANCE))) {
-         printf("The destination is not orthogonally adjacent\n");
          return FALSE;
       }
    }
    else {
-      printf("The destination is not orthogonally adjacent\n");
       return FALSE;
    }
 
@@ -455,9 +448,9 @@ BOOLEAN isPegBetween(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH]) {
             return FALSE;
          }
 #if 0
-            printf("\nthe position with no peg: %c%d. the value of this peg: %d\n",
-            move.start.x - JUMP_DIST, move.start.y, 
-            board[move.start.y][move.start.x - JUMP_DIST]);
+         printf("\nthe position with no peg: %c%d. the value of this peg:" 
+               "%d\n", move.start.x - JUMP_DIST, move.start.y, 
+               board[move.start.y][move.start.x - JUMP_DIST]);
 #endif
       }
    }

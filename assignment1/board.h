@@ -12,8 +12,8 @@
 #ifndef BOARD_H 
 #define BOARD_H
 
-#define BOARD_WIDTH	2
-#define BOARD_HEIGHT	5
+#define BOARD_HEIGHT	7
+#define BOARD_WIDTH 7
 
 /* colour codes for displaying the board */
 #define COLOR_RESET     "\x1b[0m"
@@ -25,7 +25,7 @@ typedef enum cell_contents {
 	INVALID, HOLE, PEG
 } CELL_CONTENTS;
 
-#if 0
+#if 1
 /* The initial game board - this is an example of the occasional
  * exception to the rule against global variables. Be aware that
  * this should be the only global variable in your program */
@@ -40,18 +40,22 @@ static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 };
 #endif
 
-/* this is a different game board 3x6 */
+#if 0
+/* this is a different game board 4x7 */
 static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
-	{ PEG, PEG },
-	{ PEG, PEG },
-	{ HOLE, PEG },
-	{ PEG, PEG },
-	{ PEG, PEG }
+	{ PEG, PEG, HOLE, PEG },
+	{ PEG, PEG , INVALID, PEG},
+	{ HOLE, PEG, PEG, INVALID },
+	{ PEG, PEG, PEG, PEG },
+	{ PEG, PEG, PEG, PEG },
+	{ PEG, PEG, INVALID, INVALID },
+	{ PEG, PEG, PEG, PEG }
 };
+#endif
 
 #if 0
 /* this is a different game board 9x9 */
-static const enum cell_contents master_board2[BOARD_HEIGHT][BOARD_WIDTH] = {
+static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, PEG },
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, PEG },
 	{ PEG, PEG, PEG, PEG, PEG, PEG, PEG, PEG, PEG },
@@ -62,9 +66,11 @@ static const enum cell_contents master_board2[BOARD_HEIGHT][BOARD_WIDTH] = {
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, PEG },
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, PEG }
 };
+#endif
 
+#if 0
 /* this is a different game board 9x9 */
-static const enum cell_contents master_board3[BOARD_HEIGHT][BOARD_WIDTH] = {
+static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 	{ INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
    INVALID },
 	{ INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
@@ -76,6 +82,25 @@ static const enum cell_contents master_board3[BOARD_HEIGHT][BOARD_WIDTH] = {
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, PEG },
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, PEG },
 	{ INVALID, INVALID, PEG, PEG, PEG, INVALID, INVALID, PEG, INVALID }
+};
+#endif
+
+#if 0
+static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
+	{ INVALID, INVALID, HOLE, HOLE, HOLE, INVALID, INVALID },
+	{ INVALID, INVALID, HOLE, HOLE, HOLE, INVALID, INVALID },
+	{ HOLE, HOLE, HOLE, HOLE, HOLE, HOLE, HOLE },
+	{ PEG, PEG, HOLE, HOLE, HOLE, HOLE, HOLE },
+	{ HOLE, HOLE, HOLE, HOLE, HOLE, HOLE, HOLE },
+	{ INVALID, INVALID, HOLE, HOLE, HOLE, INVALID, INVALID },
+	{ INVALID, INVALID, HOLE, HOLE, HOLE, INVALID, INVALID }
+};
+#endif
+
+#if 0
+static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
+	{ INVALID, HOLE },
+	{ PEG, PEG }
 };
 #endif
 

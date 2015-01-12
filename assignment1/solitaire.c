@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "solitaire.h"
 #include "utility.h"
 #include "game.h"
@@ -35,6 +36,7 @@ int getSelection(void);
 void printRules(void);
 BOOLEAN playAgain(void);
 
+/* main function. program starts here */
 int main(int argc, char *argv[])
 {
    MENU menu;
@@ -51,25 +53,22 @@ int main(int argc, char *argv[])
 
       switch (selection) {
          case 1:
-            play_game();
-            while (playAgain()) {
+            do {
                play_game();
-            }
+            } while (playAgain());
             break;
          case 2:
             printRules();
             break;
          case 3:
-            printf("\nProgram quit.\n\n");
+            puts("\nProgram quit.\n");
             quit = TRUE;
-            break;
-         default:
-            printf("error");
       }
    }
    return EXIT_SUCCESS;
 }
 
+/* function to initialise the menu */
 void initMenu(MENU *menu) {
    strcpy(menu->title, "PEG SOLITIARE");
    strcpy(menu->options[0], "1. Play Game");
@@ -77,6 +76,7 @@ void initMenu(MENU *menu) {
    strcpy(menu->options[2], "3. Quit");
 }
 
+/* function to print the menu to the screen */
 void printMenu(MENU *menu) {
    int i;
 
@@ -89,6 +89,7 @@ void printMenu(MENU *menu) {
    putchar('\n');
 }
 
+/* function to get the user's menu selection */
 int getSelection(void) {
    char line[MENU_INPUT_LEN + EXTRA_CHARS];
    char *end;
@@ -121,6 +122,7 @@ int getSelection(void) {
    return selection;
 }
 
+/* function to print the rules of the game to the screen */
 void printRules(void) {
    int i;
    char* rules[NUM_RULES_LINES] = {
@@ -147,15 +149,27 @@ void printRules(void) {
    getEnter();
 }
 
+/* function to ask the user if they want to play another game */
 BOOLEAN playAgain(void) {
+   BOOLEAN validAnswer, answer;
    char line[MENU_INPUT_LEN + EXTRA_CHARS];
 
-   getString(line, MENU_INPUT_LEN, "Play again? Y/N: ");
+   do {
+      getString(line, MENU_INPUT_LEN, "Play again? Y/N: ");
    
-   if (line[0] == 'y') {
-      return TRUE;
-   }
-   else {
-      return FALSE;
-   }
+      if (toupper(line[0]) == 'Y') {
+         validAnswer = TRUE;
+         answer = TRUE;
+      }
+      else if (toupper(line[0]) == 'N') {
+         validAnswer = TRUE;
+         answer = FALSE;
+      }
+      else {
+         puts("\nPlease enter \"Y\" or \"N\".");
+         validAnswer = FALSE;
+      }
+   } while (!validAnswer);
+
+   return answer;
 }
