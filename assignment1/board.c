@@ -85,64 +85,55 @@ void printRow(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum)
 	putchar('\n');
 }
 
-/* print the border line for a cell */
+/* print the border line. we either need to print spaces or lines.
+ * we then need to print an extra character on the end of each row to complete
+ * the line. */
 void printBoarderLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
 		       int cellNum)
 {
-	/* check if we're in the yaxis label column */
-	if (cellNum == YAXIS_POS) {
+	if ((get_contents(board, rowNum, cellNum) == INVALID)
+	    && get_contents(board, rowNum - 1, cellNum) == INVALID)
 		printSpaces(board, rowNum, cellNum, LINE1);
-	/* check if we're in the xaxis label row */
-	} else if (rowNum == BOARD_DISPLAY_HEIGHT - 1) {
-		/* check if we need to print lines */
-		if (board[rowNum - 1][cellNum - LABEL_LEN] != INVALID)
-			printLines(board, rowNum, cellNum);
-		/* else we need to print spaces */
-		else
-			printSpaces(board, rowNum, cellNum, LINE1);
-	/* else we're in the range of actual cells */
-	} else {
-		/* check if we need to print lines */
-		if (board[rowNum][cellNum - LABEL_LEN] != INVALID)
-			printLines(board, rowNum, cellNum);
-		/* check if we need to print lines to finish the above row */
-		else if ((rowNum != 0) && (board[rowNum -1][cellNum - LABEL_LEN]
-					   != INVALID))
-			printLines(board, rowNum, cellNum);
-		/* else we need to print spaces */
-		else
-			printSpaces(board, rowNum, cellNum, LINE1);
-	}
+	else
+		printLines(board, rowNum, cellNum);
 
 	if (cellNum == BOARD_DISPLAY_WIDTH - 1) {
-		if (get_contents(board, rowNum, cellNum) != INVALID)
-			putchar('+');
-		else
+		if ((get_contents(board, rowNum, cellNum) == INVALID)
+		    && (get_contents(board, rowNum - 1, cellNum) == INVALID)) {
 			putchar(' ');
+		} else {
+			printf(COLOR_LINES);
+			putchar('+');
+			printf(COLOR_RESET);
+		}
 	}
 }
 
-/* print the "data" cell line for a cell */
+/* print the cell line. we either need to print yaxis labels, xaxis labels,
+ * pegs, holes, or spaces. we also need to print an extra character on the end
+ * of each row to complete the line. */
 void printCellLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
 {
-	/* check if we're in the yaxis label column */
-	if ((cellNum == YAXIS_POS) && (rowNum != BOARD_DISPLAY_HEIGHT - 1))
+	if ((cellNum == YAXIS_POS) && (rowNum != BOARD_DISPLAY_HEIGHT - 1)) {
 		printYaxis(rowNum);
-	/* check if we're in the xaxis label row */
-	else if ((cellNum != YAXIS_POS) && (rowNum == BOARD_DISPLAY_HEIGHT - 1))
-		printXaxis(cellNum);
-	/* check if we're in the bottom left corner */
-	else if ((cellNum == YAXIS_POS) && (rowNum == BOARD_DISPLAY_HEIGHT - 1))
-		printSpaces(board, rowNum, cellNum, LINE2);
-	/* else we're in the range of the actual data cells */
-	else
+	} else if (rowNum == BOARD_DISPLAY_HEIGHT - 1) {
+		if (cellNum == YAXIS_POS)
+			printSpaces(board, rowNum, cellNum, LINE2);
+		else
+			printXaxis(cellNum);
+	} else if ((cellNum != YAXIS_POS)
+		   && (rowNum != BOARD_DISPLAY_HEIGHT - 1)) {
 		printDataCell(board, rowNum, cellNum);
+	}
 
 	if (cellNum == BOARD_DISPLAY_WIDTH - 1) {
-		if (get_contents(board, rowNum, cellNum) != INVALID)
+		if (get_contents(board, rowNum, cellNum) != INVALID) {
+			printf(COLOR_LINES);
 			putchar('|');
-		else
+			printf(COLOR_RESET);
+		} else {
 			putchar(' ');
+		}
 	}
 }
 
@@ -167,10 +158,6 @@ void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
 {
 	printf(COLOR_LINES);
 	printf("+---");
-
-	if (is_close_cell(board, rowNum, cellNum))
-		putchar('+');
-
 	printf(COLOR_RESET);
 }
 
@@ -179,39 +166,24 @@ void printSpaces(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum,
 		 int lineNum)
 {
 	if (lineNum == LINE1) {
-		if (get_contents(board, rowNum, cellNum - 1) != INVALID)
-		{
-			if (cellNum == BOARD_DISPLAY_WIDTH -1) {
-				putchar('+');
-				printf("   ");
-				putchar('+');
-			} else {
-				putchar('+');
-				printf("   ");
-			}
-		} else if ((get_contents(board, rowNum, cellNum) != INVALID)
-		    && (cellNum == BOARD_DISPLAY_WIDTH - 1)) {
-			putchar('+');
-			printf("   ");
-			putchar('+');
+		if ((get_contents(board, rowNum - 1, cellNum - 1) != INVALID)
+		    || (get_contents(board, rowNum, cellNum - 1) != INVALID)) {
+			printf(COLOR_LINES);
+			printf("+   ");
+			printf(COLOR_RESET);
 		} else {
 			printf("    ");
 		}
-
 	}
-	else if (lineNum == LINE2) {
-		if (get_contents(board, rowNum, cellNum - 1) != INVALID) {
-			putchar('|');
-			printf("   ");
-		} else {
+	else {
+		if (get_contents(board, rowNum, cellNum -1) == INVALID) {
 			printf("    ");
+		} else {
+			printf(COLOR_LINES);
+			printf("|   ");
+			printf(COLOR_RESET);
 		}
-
 	}
-
-
-	if (is_close_cell(board, rowNum, cellNum))
-		putchar(' ');
 }
 
 /* print the yaxis */
@@ -236,12 +208,6 @@ void printpeg(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
 	putchar('o');
 	putchar(' ');
 	printf(COLOR_RESET);
-
-	if (is_close_cell(board, rowNum, cellNum)) {
-		printf(COLOR_LINES);
-		putchar('|');
-		printf(COLOR_RESET);
-	}
 }
 
 /* print a hole in a cell */
@@ -254,21 +220,12 @@ void printhole(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
 	putchar('.');
 	putchar(' ');
 	printf(COLOR_RESET);
-
-	if (is_close_cell(board, rowNum, cellNum)) {
-		printf(COLOR_LINES);
-		putchar('|');
-		printf(COLOR_RESET);
-	}
 }
 
 /* print an invalid space in a cell */
 void printinvalid(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
 {
 	printf("    ");
-
-	if (is_close_cell(board, rowNum, cellNum))
-		putchar(' ');
 }
 
 /* return the contents of a cell. return invalid if out of range */
@@ -294,182 +251,3 @@ CELL_CONTENTS get_contents(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
 
 	return contents;
 }
-
-/* print extra characters if necessary to enclose the cell - if the next cell is
- * empty */
-BOOLEAN is_close_cell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
-		      int cellNum)
-{
-	BOOLEAN isclose = FALSE;
-	CELL_CONTENTS curr_cell = get_contents(board, rowNum, cellNum),
-		      right_cell = get_contents(board, rowNum, cellNum + 1),
-		      right_top_cell = get_contents(board, rowNum - 1, cellNum
-						    + 1),
-		      top_cell = get_contents(board, rowNum + 1, cellNum);
-#if 0
-		      left_top_cell = get_contents(board, rowNum + 1, cellNum
-						   - 1),
-		      left_cell = get_contents(board, rowNum, cellNum - 1),
-		      left_bottom_cell = get_contents(board, rowNum + 1, cellNum
-						      - 1),
-		      bottom_cell = get_contents(board, rowNum + 1, cellNum),
-		      right_bottom_cell = get_contents(board, rowNum + 1,
-						       cellNum + 1);
-#endif
-	switch (curr_cell) {
-	case PEG :
-		if (right_cell == INVALID) {
-			if (top_cell == INVALID)
-				;
-#if 0
-				isclose = TRUE;
-#endif
-		}
-
-		break;
-	case HOLE :
-		break;
-	case INVALID :
-		if ((top_cell != INVALID) && (right_top_cell == INVALID))
-			;
-#if 0
-			isclose = TRUE;
-#endif
-		break;
-	}
-
-	return isclose;
-}
-#if 0
-	/* check if we need to end the line with a "+". be carefull to check
-	 * the top row and the last column before checking other cells to make
-	 * sure we don't do any out of bounds calls */
-	if (cellNum == BOARD_DISPLAY_WIDTH - 1) {
-		/* we're at the last cell in the row */
-		if (rowNum == 0) {
-			/* we're at the last cell in the first row */
-			if (board[rowNum][cellNum - LABEL_LEN] != INVALID) {
-				printf(COLOR_LINES);
-				putchar('+');
-				printf(COLOR_RESET);
-			}
-		} else {
-			/* we're at the last cell in any row but the first */
-			if ((board[rowNum][cellNum - LABEL_LEN] != INVALID)
-			    || (board[rowNum -1][cellNum - LABEL_LEN]
-				!= INVALID)) {
-				printf(COLOR_LINES);
-				putchar('+');
-				printf(COLOR_RESET);
-			}
-		}
-	} else {
-		/* we're at any cell but the last */
-		if (rowNum == 0) {
-			/* we're on the first row in any cell but the last */
-			if ((board[rowNum][cellNum - LABEL_LEN] != INVALID)
-			    && (board[rowNum][cellNum - LABEL_LEN + 1]
-				== INVALID)) {
-				printf(COLOR_LINES);
-				putchar('+');
-				printf(COLOR_RESET);
-			}
-		} else if (rowNum != 0 && rowNum != BOARD_DISPLAY_HEIGHT
-			   - 1) {
-			/* we're on any row but the first or last, in any cell
-			 * but the last */
-			if ((board[rowNum][cellNum - LABEL_LEN] != INVALID)
-			    && (board[rowNum][cellNum - LABEL_LEN + 1]
-				== INVALID)
-			    && (board[rowNum - 1][cellNum - LABEL_LEN + 1]
-				== INVALID)) {
-				/* the cell is not invalid and the next cell is
-				 * invalid and the cell above the next cell is
-				 * invalid */
-				printf(COLOR_LINES);
-				putchar('+');
-				printf(COLOR_RESET);
-			} else if ((board[rowNum -1][cellNum - LABEL_LEN]
-				    != INVALID)
-				   && (board[rowNum - 1][cellNum - LABEL_LEN
-				       + 1] == INVALID)
-				   && (board[rowNum][cellNum - LABEL_LEN + 1]
-				       == INVALID)) {
-				/* the cell above is not invalid and both the
-				 * next cell and the cell next to the cell
-				 * above are invalid */
-				printf(COLOR_LINES);
-				putchar('+');
-				printf(COLOR_RESET);
-			}
-		} else if (rowNum == BOARD_DISPLAY_HEIGHT - 1) {
-			/* we're on the last row, in any cell but the last */
-			if ((board[rowNum - 1][cellNum - LABEL_LEN] != INVALID)
-			    && (board[rowNum - 1][cellNum - LABEL_LEN + 1]
-				== INVALID)) {
-				/* the cell above is not invalid and the cell
-				 * next to the cell above is invalid */
-				printf(COLOR_LINES);
-				putchar('+');
-				printf(COLOR_RESET);
-			}
-		}
-	}
-
-	/* check if we need to start the line with an extra space */
-	if (cellNum == YAXIS_POS) {
-		/* we're at the start of the board */
-		putchar(' ');
-	} else if ((rowNum != BOARD_DISPLAY_HEIGHT - 1)
-		   && (board[rowNum][cellNum - LABEL_LEN - 1] == INVALID)
-		   && (board[rowNum - 1][cellNum - LABEL_LEN - 1] == INVALID)) {
-		/* we're not in the first column and not in the last row and
-		 * the previous cell is invalid and the cell before the above
-		 * cell is invalid */
-		putchar(' ');
-	} else if (rowNum == 0 && board[rowNum][cellNum - LABEL_LEN - 1]
-		   == INVALID) {
-		/* we're not in the first column and we are in the first row
-		 * and the previous cell is invalid */
-		putchar(' ');
-	} else if ((cellNum == 1) && (board[rowNum][cellNum - LABEL_LEN]
-				      == INVALID)) {
-		/* we're in the first column of the data cells and the cell is
-		 * invalid*/
-		putchar(' ');
-	} else if ((rowNum == BOARD_DISPLAY_HEIGHT - 1) &&
-         (board[rowNum -1][cellNum - LABEL_LEN - 1] == INVALID)) {
-		/* we're not in the first column and we are in the last row and
-		 * the previous cell in the above row is invalid */
-		putchar(' ');
-	}
-
-	if (getcontents(board, rowNum, cellNum - LABEL_LEN + 1) == INVALID) {
-		printf(COLOR_LINES);
-		putchar('|');
-		printf(COLOR_RESET);
-	}
-
-	/* check if we need to end the line with a "|" */
-	if (cellNum == BOARD_DISPLAY_WIDTH - 1) {
-		/* we're at the end of the board. check this first so
-		 * the next check doesn't run out of bounds */
-		printf(COLOR_LINES);
-		putchar('|');
-		printf(COLOR_RESET);
-	} else if (board[rowNum][cellNum - LABEL_LEN + 1] == INVALID) {
-		/* the next cell over is invalid */
-		printf(COLOR_LINES);
-		putchar('|');
-		printf(COLOR_RESET);
-	}
-
-		/* check if we need to print an extra space */
-		if (cellNum == YAXIS_POS)
-			/* we're in the first column of data cells */
-			putchar(' ');
-		else if (board[rowNum][cellNum - LABEL_LEN - 1] == INVALID)
-			/* the cell on the left didn't close itself
-			 * with a "|" */
-			putchar(' ');
-#endif

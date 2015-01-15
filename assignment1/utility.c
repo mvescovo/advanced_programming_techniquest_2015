@@ -50,7 +50,7 @@ BOOLEAN getString(char string[], unsigned length, char prompt[])
 		/* validate input */
 		if (line[strlen(line) - 1] != '\n') {
 			/* buffer overflow */
-			puts("\n2Too many characters entered.");
+			puts("\nToo many characters entered.");
 			read_rest_of_line();
 			continue;
 		}

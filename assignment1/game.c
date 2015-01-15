@@ -246,7 +246,7 @@ enum move_result player_move(enum cell_contents board[][BOARD_WIDTH])
 					     "pegs are not on the board.");
 					break;
 				case NO_PEG :
-					printf("Invalid move: there is no peg "
+					printf("Invalid move: there's no peg "
 					       "in %c%d.\n",
 					       move.start.x + X_OFFSET,
 					       move.start.y + Y_OFFSET);

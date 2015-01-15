@@ -17,11 +17,11 @@
 
 /* colour codes for displaying the board */
 #define COLOR_RESET     "\x1b[0m"
-#if 0
+#if 1
 #define COLOR_LINES     "\x1b[2;34m"    /* blue */
 #endif
-#if 1
-#define COLOR_LINES     "\x1b[1;37m"    /* blue */
+#if 0
+#define COLOR_LINES     "\x1b[1;37m"    /* white */
 #endif
 #define COLOR_HOLE      "\x1b[2;34m"    /* blue */
 #define COLOR_PEG       "\x1b[1;37m"    /* white */
@@ -76,10 +76,10 @@ static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 #if 0
 /* this is a different game board 9x9 */
 static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
-	{ INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
-   INVALID },
-	{ INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
-   INVALID },
+	{ INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
+		INVALID, INVALID },
+	{ INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
+		INVALID, INVALID },
 	{ PEG, PEG, PEG, PEG, PEG, PEG, PEG, PEG, PEG },
 	{ PEG, PEG, PEG, HOLE, PEG, PEG, PEG, PEG, PEG },
 	{ PEG, PEG, PEG, PEG, PEG, PEG, PEG, PEG, PEG },
@@ -91,6 +91,7 @@ static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 #endif
 
 #if 0
+/* this is a different game board 7x7 */
 static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 	{ INVALID, INVALID, HOLE, HOLE, HOLE, INVALID, INVALID },
 	{ INVALID, INVALID, HOLE, HOLE, HOLE, INVALID, INVALID },
@@ -103,9 +104,9 @@ static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
 #endif
 
 #if 0
+/* this is a different game board 2x2 */
 static const enum cell_contents master_board[BOARD_HEIGHT][BOARD_WIDTH] = {
-	{ INVALID, HOLE },
-	{ PEG, PEG }
+	{ INVALID }
 };
 #endif
 
