@@ -12,12 +12,17 @@
 #ifndef BOARD_H 
 #define BOARD_H
 
-#define BOARD_HEIGHT	7
+#define BOARD_HEIGHT 7
 #define BOARD_WIDTH 7
 
 /* colour codes for displaying the board */
 #define COLOR_RESET     "\x1b[0m"
+#if 0
 #define COLOR_LINES     "\x1b[2;34m"    /* blue */
+#endif
+#if 1
+#define COLOR_LINES     "\x1b[1;37m"    /* blue */
+#endif
 #define COLOR_HOLE      "\x1b[2;34m"    /* blue */
 #define COLOR_PEG       "\x1b[1;37m"    /* white */
 

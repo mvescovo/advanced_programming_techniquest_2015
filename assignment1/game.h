@@ -33,7 +33,7 @@ enum move_result
 
 typedef enum move_type
 {
-   NOT_ON_BOARD, NO_PEG, NO_HOLE, NOT_ORTH_ADJ, NO_PEG_BETWEEN
+	NOT_ON_BOARD, NO_PEG, NO_HOLE, NOT_ORTH_ADJ, NO_PEG_BETWEEN
 } MOVE_TYPE;
 
 /* Requirement 3 - controls the flow of play in the game */
@@ -41,7 +41,8 @@ void play_game(void);
 
 /* Requirement 6 - tests to see whether a move is valid or not */
 BOOLEAN is_valid_move(struct move curr_move,
-	enum cell_contents board[][BOARD_WIDTH], MOVE_TYPE *return_type);
+		      enum cell_contents board[][BOARD_WIDTH],
+		      MOVE_TYPE *return_type);
 
 /* Requirement 7 - tests to see whether it is the end of the game */
 BOOLEAN is_game_over(enum cell_contents board[][BOARD_WIDTH]);

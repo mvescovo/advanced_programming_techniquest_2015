@@ -23,64 +23,64 @@
  * leftover characters in the input buffer. */
 void read_rest_of_line(void)
 {
-        int ch;
-        /* remove all characters from the buffer */
-        while (ch = getc(stdin), ch != '\n' && ch != EOF)
-                ;
-        /* clear the error status of the input pointer */
-        clearerr(stdin);
+	int ch;
+	/* remove all characters from the buffer */
+	while (ch = getc(stdin), ch != '\n' && ch != EOF)
+		;
+	/* clear the error status of the input pointer */
+	clearerr(stdin);
 }
 
 /* this function gets a string from the user and checks that it's of the
  * requested length */
-BOOLEAN getString(char string[], unsigned length, char prompt[]) {
-   char line[LINE_LEN + EXTRA_CHARS];
-   BOOLEAN success = FALSE;
+BOOLEAN getString(char string[], unsigned length, char prompt[])
+{
+	char line[LINE_LEN + EXTRA_CHARS];
+	BOOLEAN success = FALSE;
 
-   assert(length <= LINE_LEN);
+	assert(length <= LINE_LEN);
 
-   do {
-      printf("%s", prompt);
-      
-      /* read in characters */
-      if (fgets(line , length + EXTRA_CHARS, stdin) == NULL) {
-         return FALSE;
-      }
+	do {
+		printf("%s", prompt);
 
-      /* validate input */
-      if (line[strlen(line) - 1] != '\n') {
-         /* buffer overflow */
-         puts("\n2Too many characters entered.");
-         read_rest_of_line();
-         continue;
-      }
-      
-      /* remove newline character */
-      line[strlen(line) -1] = '\0';
+		/* read in characters */
+		if (fgets(line , length + EXTRA_CHARS, stdin) == NULL)
+			return FALSE;
 
-      success = TRUE;
+		/* validate input */
+		if (line[strlen(line) - 1] != '\n') {
+			/* buffer overflow */
+			puts("\n2Too many characters entered.");
+			read_rest_of_line();
+			continue;
+		}
 
-   } while (!success);
+		/* remove newline character */
+		line[strlen(line) -1] = '\0';
 
-   strcpy(string, line);
-   return TRUE;
+		success = TRUE;
+
+	} while (!success);
+
+	strcpy(string, line);
+	return TRUE;
 }
 
 /* this function gets a press of the enter key from the user */
-void getEnter(void) {
-   char enter[ENTER_LEN + EXTRA_CHARS];
-   BOOLEAN success;
-   
-   do {
-      if (!getString(enter, ENTER_LEN, "Press Enter to return to menu.")) {
-         putchar('\n');
-         success = FALSE;
-      }
-      else if (enter[0] != '\0') {
-         success = FALSE;
-      }
-      else {
-         success = TRUE;
-      }
-   } while (!success);
+void getEnter(void)
+{
+	char enter[ENTER_LEN + EXTRA_CHARS];
+	BOOLEAN success;
+
+	do {
+		if (!getString(enter, ENTER_LEN, "Press Enter to return to "
+			       "menu.")) {
+			putchar('\n');
+			success = FALSE;
+		} else if (enter[0] != '\0') {
+			success = FALSE;
+		} else {
+			success = TRUE;
+		}
+	} while (!success);
 }

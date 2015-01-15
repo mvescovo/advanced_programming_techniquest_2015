@@ -19,23 +19,35 @@
  of course I've made an error and missed it.
 
  I've tried a few different sizes of boards with different configurations and
- they seems to display and behave correctly.
+ they seem to display and behave correctly.
 
  There's an assumption that the game won't be started with a board that doesn't
  have any moves; in that case it will never end unless the user quits. It only
  checks if the game had ended after the player makes a move.
  
  It's also assumed we aren't checking for absurd input like a bunch of
- characters and then a cntrl-d at the end. If a cntrl-d is entered it needs to
+ characters and then a ctrl-d at the end. If a ctrl-d is entered it needs to
  be at the start. Otherwise all other options of user input seem to behave
  correctly with no extra prompts or halts.
 
  In my design of modules I like the idea of encapsulation and information
  hiding and also low coupling. So for this reason I only include constants,
  enums, structs, and function prototypes in the header file if I want them to
- be public to other modules. Otherwise they are included in the .c files.
+ be public to other modules. Otherwise they are included in the .c files. I've
+ later realised that maybe this can be achieved with the static keyboard in the  header file so I may do this differently in the next assignment. However the
+ idea of putting these things in the .c files was not something I invented, it
+ was on a list of recommendations from a University in the US but I can't find
+ the reference as I was going to include it here.
 
-
+ I've tried to use the Linux Kernel coding style, but I only decided on this 
+ after I'd already finished the assignment so I haven't implemented it fully -
+ particularly with regard to naming. I've got a lot of camelCase in there. I 
+ find camelCase easy to type but nevertheless I'll try to stick to a convention. Unless there's a requirement to use another style I'll stick with this one for  now when writing C code. My comments are also not inline with this style where
+ they seem to prefer not having comments inside the functions. I've also 
+ probably commented too much but I felt for the assignment more was better than  less. Then there's the typedefs. I haven't removed the ones I created.
+ 
+ I'm really just experimenting when it comes to style so I'm hoping none of this is worth any marks deduction as long as what I've got is consistent.
+ 
  Thanks,
  Michael.
 
