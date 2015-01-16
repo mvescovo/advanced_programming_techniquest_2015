@@ -18,9 +18,9 @@
 #define X_OFFSET 65 /* subtracts ASCII offset + 1 to align with array */
 #define Y_OFFSET 1 /* subtracts 1 to align with array */
 
-typedef struct position {
+struct position {
 	int x, y;
-} POSITION;
+};
 
 typedef struct move {
 	struct position start, end;

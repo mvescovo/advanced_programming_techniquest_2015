@@ -23,42 +23,44 @@
 #define OPT_LEN 30
 #define MENU_INPUT_LEN 1
 #define EXTRA_CHARS 2
-#define NUM_RULES_LINES 15
+#define NUM_RULES_LINES 17
 
-typedef struct menu {
+struct menu {
 	char title[TITLE_LEN];
 	char options[NUM_OPT][OPT_LEN];
-} MENU;
+};
 
-void initMenu(MENU *menu);
-void printMenu(MENU *menu);
-int getSelection(void);
-void printRules(void);
-BOOLEAN playAgain(void);
+void init_menu(struct menu *menu);
+void print_menu(struct menu *menu);
+int get_selection(void);
+void print_rules(void);
+BOOLEAN play_again(void);
 
-/* main function. program starts here */
+/* 
+ * main function. program starts here. first initialise and print the menu. then
+ * get the user selection and call the appropriate function.
+ */
 int main(int argc, char *argv[])
 {
-	MENU menu;
+	struct menu menu;
 	int selection;
 	BOOLEAN quit = FALSE;
 
-	/* initialise and print menu */
-	initMenu(&menu);
-	while (!quit) {
-		printMenu(&menu);
+	init_menu(&menu);
 
-		/* get user selection and call appropriate function */
-		selection = getSelection();
+	while (!quit) {
+		print_menu(&menu);
+
+		selection = get_selection();
 
 		switch (selection) {
 		case 1 :
 			do {
 				play_game();
-			} while (playAgain());
+			} while (play_again());
 			break;
 		case 2 :
-			printRules();
+			print_rules();
 			break;
 		case 3 :
 			puts("\nProgram quit.\n");
@@ -68,8 +70,8 @@ int main(int argc, char *argv[])
 	return EXIT_SUCCESS;
 }
 
-/* function to initialise the menu */
-void initMenu(MENU *menu)
+/* initialise the menu */
+void init_menu(struct menu *menu)
 {
 	strcpy(menu->title, "PEG SOLITIARE");
 	strcpy(menu->options[0], "1. Play Game");
@@ -77,10 +79,10 @@ void initMenu(MENU *menu)
 	strcpy(menu->options[2], "3. Quit");
 }
 
-/* function to print the menu to the screen */
-void printMenu(MENU *menu)
+/* print the menu */
+void print_menu(struct menu *menu)
 {
-	int i;
+	int i; /* menu option number */
 
 	printf("\n%s\n\n", menu->title);
 
@@ -90,70 +92,75 @@ void printMenu(MENU *menu)
 	putchar('\n');
 }
 
-/* function to get the user's menu selection */
-int getSelection(void)
+/* 
+ * get menu selection. get user input then check it's a valid menu option. menu
+ * options start from 1.
+ */
+int get_selection(void)
 {
 	char line[MENU_INPUT_LEN + EXTRA_CHARS];
 	char *end;
 	int selection;
-	BOOLEAN success = FALSE;
-	int i;
+	ERROR succeeded = FAIL;
+	int i; /* menu option number */
 
 	do {
-		/* get input from the user and put it in line */
 		if (getString(line, MENU_INPUT_LEN, "Enter selection: ")
 		    != SUCCESS) {
 			printf("\nNo characters entered, ");
 			continue;
 		}
 
-		/* validate input is a menu selection */
 		selection = (int)strtol(line, &end, 10);
 
 		for (i = 1; i <= NUM_OPT; ++i) {
 			if (selection == i)
-				success = TRUE;
+				succeeded = SUCCESS;
 		}
 
-		if (success == FALSE)
+		if (succeeded == FAIL)
 			printf("Not a valid menu option, ");
 
-	} while (!success);
+	} while (succeeded != SUCCESS);
 
 	return selection;
 }
 
-/* function to print the rules of the game to the screen */
-void printRules(void)
+/* print the rules of the game then ask the user to press enter. */
+void print_rules(void)
 {
-	int i;
+	int i; /* line number */
 	char* rules[NUM_RULES_LINES] = {
-      "--------------------------------------------------------------------",
-      "The rules of peg solitaire",
-      "--------------------------------------------------------------------\n",
-      "Pegs are represented by an 'o'. Holes are represented by a '.'. The ",
-      "game starts with pegs in every square except the middle.\n",
-      "The only valid move in Peg Solitaire is to jump a peg over an ",
-      "orthogonally adjacent peg (up, down, left, or right, not diagonal) ",
-      "into an empty hole. So in this starting position, valid pegs that can ",
-      "jump are B4, D2, D6, and F4 - all jumping to the centre hole at D4. ",
-      "The peg that is jumped over is then removed from the game leaving ",
-      "another hole.\n",
-      "The object of the game is to remove as many pegs as possible before ",
-      "you are left in a position without any valid movies (i.e. no pegs can ",
-      "make a valid jump). The ideal solution to the puzzle is to be left ",
-      "with a single peg in the centre hole.\n\n"
+		"-----------------------------------------------------------",
+		"The rules of peg solitaire",
+		"-----------------------------------------------------------\n",
+		"Pegs are represented by an 'o'. Holes are represented by a ",
+		"'.'. The game starts with pegs in every square except the ",
+		"middle.\n",
+		"The only valid move in Peg Solitaire is to jump a peg over ",
+		"an orthogonally adjacent peg (up, down, left, or right, not ",
+		"diagonal) into an empty hole. So in this starting position, ",
+		"valid pegs that can jump are B4, D2, D6, and F4 - all ",
+		"jumping to the centre hole at D4. The peg that is jumped ",
+		"over is then removed from the game leaving another hole.\n",
+		"The object of the game is to remove as many pegs as possible ",
+		"before you're left in a position without any valid movies ",
+		"(i.e. no pegs can make a valid jump). The ideal solution to ",
+		"the puzzle is to be left with a single peg in the centre ",
+		"hole.\n\n"
 	};
 
 	for (i = 0; i < NUM_RULES_LINES; ++i)
 		printf("\n%s", rules[i]);
+
 	getEnter();
 }
 
-/* function to ask the user if they want to play another game */
-BOOLEAN playAgain(void)
+/* ask the user if they want to play another game */
+BOOLEAN play_again(void)
 {
-	BOOLEAN validAnswer, answer;
+	BOOLEAN validAnswer;
+	BOOLEAN answer;
 	char line[MENU_INPUT_LEN + EXTRA_CHARS];
 
 	do {

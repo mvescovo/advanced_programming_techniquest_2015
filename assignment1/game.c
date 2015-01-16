@@ -38,13 +38,17 @@ void print_result(CELL_CONTENTS board[][BOARD_WIDTH], BOOLEAN quit);
 void remove_jumped_peg(CELL_CONTENTS board[][BOARD_WIDTH], MOVE *move);
 void print_invalid_move_error(MOVE *move, MOVE_TYPE return_type);
 
-/* Requirement 3 - controls the flow of play in the game */
+/* 
+ * Requirement 3 - controls the flow of play in the game. first initialise the
+ * game. then display the board and take player moves while the user hasn't quit
+ * or the game has not ended. then print the result.
+ */
 void play_game(void)
 {
 	enum cell_contents board[BOARD_HEIGHT][BOARD_WIDTH];
-	BOOLEAN quit = FALSE; /* has the user quit */
-	BOOLEAN gameEnd = FALSE; /* has the game finished */
-	BOOLEAN validMoves = TRUE; /* are there any valid moves */
+	BOOLEAN quit = FALSE;
+	BOOLEAN gameEnd = FALSE;
+	BOOLEAN validMoves = TRUE;
 
 	init_board(board);
 
@@ -90,48 +94,58 @@ void print_result(CELL_CONTENTS board[][BOARD_WIDTH], BOOLEAN quit)
 	}
 }
 
-/* Requirement 6 - tests to see whether a move is valid or not */
+/* 
+ * Requirement 6 - tests to see whether a move is valid or not. first check if
+ * the coordinates are on the board. then check if the source has a peg in it.
+ * then check if the destination is a hole. then check if the destination is
+ * orthogonally adjacent to the source peg. then check if there's a peg between
+ * the source and destination.
+ */
 BOOLEAN is_valid_move(struct move curr_move, enum cell_contents
 		      board[][BOARD_WIDTH], MOVE_TYPE *return_type)
 {
-	BOOLEAN valid_move = TRUE; /* is the move valid */
+	BOOLEAN succeeded = FALSE;
 
-	/* check coordinates are on the board */
-	if (out_of_bounds(&curr_move, board)) {
-		if (return_type != NULL)
-			*return_type = NOT_ON_BOARD;
-		valid_move = FALSE;
+	while (succeeded != TRUE) {
+		if (out_of_bounds(&curr_move, board)) {
+			if (return_type != NULL)
+				*return_type = NOT_ON_BOARD;
+			succeeded = FALSE;
+			break;
+		}
+
+		if (board[curr_move.start.y][curr_move.start.x] != PEG) {
+			if (return_type != NULL)
+				*return_type = NO_PEG;
+			succeeded = FALSE;
+			break;
+		}
+
+		if (board[curr_move.end.y][curr_move.end.x] != HOLE) {
+			if (return_type != NULL)
+				*return_type = NO_HOLE;
+			succeeded = FALSE;
+			break;
+		}
+
+		if (!orth_adj(&curr_move, board)) {
+			if (return_type != NULL)
+				*return_type = NOT_ORTH_ADJ;
+			succeeded = FALSE;
+			break;
+		}
+
+		if (!peg_between(&curr_move, board)) {
+			if (return_type != NULL)
+				*return_type = NO_PEG_BETWEEN;
+			succeeded = FALSE;
+			break;
+		}
+
+		succeeded = TRUE;
 	}
 
-	/* check if source has a peg in it */
-	if (board[curr_move.start.y][curr_move.start.x] != PEG) {
-		if (return_type != NULL)
-			*return_type = NO_PEG;
-		valid_move = FALSE;
-	}
-
-	/* check if destination is a hole */
-	if (board[curr_move.end.y][curr_move.end.x] != HOLE) {
-		if (return_type != NULL)
-			*return_type = NO_HOLE;
-		valid_move = FALSE;
-	}
-
-	/* check if destination is orthogonally adjacent to the source peg */
-	if (!orth_adj(&curr_move, board)) {
-		if (return_type != NULL)
-			*return_type = NOT_ORTH_ADJ;
-		valid_move = FALSE;
-	}
-
-	/* check if there's a peg between source and distination */
-	if (!peg_between(&curr_move, board)) {
-		if (return_type != NULL)
-			*return_type = NO_PEG_BETWEEN;
-		valid_move = FALSE;
-	}
-
-	return valid_move;
+	return succeeded;
 }
 
 /* Requirement 7 - tests to see whether it is the end of the game */
@@ -274,7 +288,12 @@ void print_invalid_move_error(MOVE *move, MOVE_TYPE return_type)
 	}
 }
 
-/* get a move from the user */
+/* 
+ * get a move from the user. first get an input string and check if the user
+ * quit by entering either ctrl+d or q. then get the source peg followed by the
+ * destination peg from the string, checking their validity. confirm there were
+ * no extra characters entered.
+ */
 ERROR get_move(MOVE *move)
 {
 	ERROR error = FAIL;
@@ -283,10 +302,8 @@ ERROR get_move(MOVE *move)
 	char *end;
 
 	while (error != SUCCESS) {
-		/* get input and check if user quit */
 		if (getString(line, PLAYER_MOVE_LEN, "Please enter a move "
-			       "[enter Q or ctrl-D to quit]: ")
-		    != SUCCESS) {
+			      "[enter Q or ctrl-D to quit]: ") != SUCCESS) {
 			putchar('\n');
 			error = FAIL; /* user pressed ctrl-d to quit */
 			break;
@@ -295,82 +312,77 @@ ERROR get_move(MOVE *move)
 			break;
 		}
 
-		/* get first token (source peg) */
 		token = strtok(line, DELIMS);
 
 		if (token == NULL) {
 			puts("Nothing entered.");
+			continue;
+		}
+
+		if (valid_peg(token)) {
+			move->start.x = toupper(token[0]) - X_OFFSET;
+			move->start.y = strtol(token + 1, &end, 10) - Y_OFFSET;
 		} else {
-			/* validate source peg */
-			if (valid_peg(token)) {
-				move->start.x = toupper(token[0]) - X_OFFSET;
-				move->start.y = strtol(token + 1, &end, 10)
-					- Y_OFFSET;
+			continue;
+		}
 
-				/* get next token (destination peg) */
-				token = strtok(NULL, DELIMS);
+		token = strtok(NULL, DELIMS);
 
-				if (token == NULL) {
-					puts("Missing destination "
-					     "coordinates.");
-				} else {
-					/* validate destination peg */
-					if (valid_peg(token)) {
-						move->end.x = toupper(token[0])
-							- X_OFFSET;
-						move->end.y = strtol(token + 1,
-								     &end, 10)
-							- Y_OFFSET;
+		if (token == NULL) {
+			puts("Missing destination coordinates.");
+			continue;
+		}
 
-						/* check if there are any more
-						 * tokens */
-						token = strtok(NULL, DELIMS);
-						if (token == NULL) {
-							error = SUCCESS;
-						} else {
-							printf("Too many "
-							       "coordinates "
-							       "entered: %s\n",
-							       token);
-						}
-					}
-				}
-			}
+		if (valid_peg(token)) {
+			move->end.x = toupper(token[0]) - X_OFFSET;
+			move->end.y = strtol(token + 1, &end, 10) - Y_OFFSET;
+		} else {
+			continue;
+		}
+
+		token = strtok(NULL, DELIMS);
+
+		if (token == NULL) {
+			error = SUCCESS;
+		} else {
+			printf("Too many coordinates entered: %s\n\n", token);
+			continue;
 		}
 	}
 	return error;
 }
 
-/* check that a peg is valid for the current board */
+/* 
+ * check that a peg is valid for the current board. first check the string is
+ * long enough to hold both an X and Y coordinate, then check if the Y
+ * coordinate is a number, then check there are no extra characters after
+ * the Y coordinate.
+ */
 BOOLEAN valid_peg(const char *peg)
 {
 	char *end;
 
-	/* check there is both an X and Y coordinate */
 	if (strlen(peg) < MIN_PEG_LEN) {
-		printf("Invalid coordinate pair: %s\n", peg);
+		printf("Invalid coordinate pair: %s\n\n", peg);
 		return FALSE;
 	}
 
-	/* check Y coordinate is a number */
-	strtol(peg + 1, &end, 10);
-
-	if ((peg + 1) == end) {
-		printf("Invalid Y coordinate: %s\n", peg + 1);
+	if (strtol(peg + 1, &end, 10) == 0) {
+		printf("Invalid Y coordinate: %s\n\n", peg + 1);
 		return FALSE;
 	}
 
-	/* check there are no extra characters after y coordinate and that
-	 * there is a delimiter between the start and end coordinate pairs */
 	if (*end != '\0')
-		printf("Invalid coordinate pair: %s\n", peg);
+		printf("Invalid coordinate pair: %s\n\n", peg);
 	return TRUE;
 }
 
 /* get the number of pegs left on the board */
 int get_pegs_left(CELL_CONTENTS board[][BOARD_WIDTH])
 {
-	int i, j, numPegs = 0;
+	int i; /* row number */
+	int j; /* column number */
+	int numPegs = 0;
 
 	for (i = 0; i < BOARD_HEIGHT; ++i) {
 		for (j = 0; j < BOARD_WIDTH; ++j) {
@@ -384,85 +396,79 @@ int get_pegs_left(CELL_CONTENTS board[][BOARD_WIDTH])
 /* check coordinates are not out of bounds of the board array */
 BOOLEAN out_of_bounds(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH])
 {
+	BOOLEAN succeeded = FALSE;
+
 	if ((move->start.x < 0) || (move->start.x > BOARD_WIDTH - 1))
-		return TRUE;
+		succeeded = TRUE;
 
 	if ((move->start.y < 0) || (move->start.y > BOARD_HEIGHT - 1))
-		return TRUE;
+		succeeded = TRUE;
 
 	if ((move->end.x < 0) || (move->end.x > BOARD_WIDTH - 1))
-		return TRUE;
+		succeeded = TRUE;
 
 	if ((move->end.y < 0) || (move->end.y > BOARD_HEIGHT - 1))
-		return TRUE;
+		succeeded = TRUE;
 
-	return FALSE;
+	return succeeded;
 }
 
-/* check the coordinates in a move are othogonally adjacent */
+/* 
+ * check the coordinates in a move are othogonally adjacent. first check if
+ * source and destination are on the same Y axis and if so, check the X axis is
+ * exactly VALID_DISTANCE positions away. if not, do the same check for the X
+ * axis. One of them must be true.
+ */
 BOOLEAN orth_adj(MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH])
 {
-	/* check if source and destination are on the same y axis */
+	BOOLEAN succeeded = TRUE;
+
 	if ((move->start.x) == (move->end.x)){
-		/* check that x axis is exactly VALID_DISTANCE positions away */
 		if (((move->start.y) != (move->end.y + VALID_DISTANCE))
 		    && ((move->start.y) != (move->end.y - VALID_DISTANCE)))
-			return FALSE;
-	/* check if source and destination are on the same x axis */
+			succeeded = FALSE;
 	} else if ((move->start.y) == (move->end.y)) {
-		/* check that y axis is exactly VALID_DISTANCE positions away */
 		if (((move->start.x) != (move->end.x + VALID_DISTANCE))
 		    && ((move->start.x) != (move->end.x - VALID_DISTANCE)))
-			return FALSE;
+			succeeded = FALSE;
 	} else {
-		return FALSE;
+		succeeded = FALSE;
 	}
 
-	return TRUE;
+	return succeeded;
 }
 
-/* check there's a peg between source and destination */
+/* 
+ * check there's a peg between source and destination. first check if the
+ * destination is vertical from the source and if so, is it higher or lower and
+ * is there a peg in the middle. if not, do the same check horizontally.
+ */
 BOOLEAN peg_between(const MOVE *move, CELL_CONTENTS board[][BOARD_WIDTH])
 {
-	/* check if we're going vertically*/
+	BOOLEAN succeeded = TRUE;
+
 	if ((move->start.x) == (move->end.x)) {
-		/* check if the destination is higher */
 		if (move->start.y < move->end.y) {
-			/* check there's a peg between */
 			if ((board[move->start.y + JUMP_DIST][move->start.x]
 			     != PEG))
-				return FALSE;
+				succeeded = FALSE;
 		}
-		/* else destination is lower */
 		else {
-			/* check there's a peg between */
 			if ((board[move->start.y - JUMP_DIST][move->start.x]
 			     != PEG))
-				return FALSE;
+				succeeded = FALSE;
 		}
-	/* else going horizontally */
 	} else {
-		/* check if the destination is higher */
 		if (move->start.x < move->end.x) {
-			/* check there's a peg between */
 			if (board[move->start.y][move->start.x + JUMP_DIST]
 			    != PEG)
-				return FALSE;
-		/* else destination is lower */
+				succeeded = FALSE;
 		} else {
-			/* check there's a peg between */
 			if ((board[move->start.y][move->start.x - JUMP_DIST]
 			     != PEG))
-				return FALSE;
-#if 0
-			printf("\nthe position with no peg: %c%d. the value of"
-			       " this peg: %d\n", move.start.x - JUMP_DIST,
-			       move.start.y, board[move.start.y][move.start.x
-			       - JUMP_DIST]);
-#endif
+				succeeded = FALSE;
 		}
 	}
 
-	return TRUE;
+	return succeeded;
 }
-

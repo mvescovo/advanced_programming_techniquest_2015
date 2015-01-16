@@ -11,8 +11,8 @@
  
  Hello Marker.
  
- I hope you find my code easy to read. I've put plenty of comments in to help
- the reader see what's going on.
+ I hope you find my code easy to read. I've put plenty of comments in but as I'm trying to follow the Linux kernel coding style I've deliberately kept most of
+ them outside the function body.
 
  As far as I can tell my code is 100% functional and consistent with the
  general requirements, so there should be no need to take off any marks - unless
@@ -33,21 +33,12 @@
  In my design of modules I like the idea of encapsulation and information
  hiding and also low coupling. So for this reason I only include constants,
  enums, structs, and function prototypes in the header file if I want them to
- be public to other modules. Otherwise they are included in the .c files. I've
- later realised that maybe this can be achieved with the static keyboard in the  header file so I may do this differently in the next assignment. However the
- idea of putting these things in the .c files was not something I invented, it
- was on a list of recommendations from a University in the US but I can't find
- the reference as I was going to include it here.
+ be public to other modules. Otherwise they are included in the .c files. I'm
+ still unsure if this really is the best way but for now it makes the most sense to me. I've researched this a bit and I've found several good articles that
+ agree. I wasn't able to find any good reason to just put everything in header   files and then make some things static. One site specifically recommends not
+ making anything in a header file static: http://embeddedgurus.com/barr-code/2010/11/what-belongs-in-a-c-h-header-file. Anyway I feel this is a much cleaner way to code.
 
- I've tried to use the Linux Kernel coding style, but I only decided on this 
- after I'd already finished the assignment so I haven't implemented it fully -
- particularly with regard to naming. I've got a lot of camelCase in there. I 
- find camelCase easy to type but nevertheless I'll try to stick to a convention. Unless there's a requirement to use another style I'll stick with this one for  now when writing C code. My comments are also not inline with this style where
- they seem to prefer not having comments inside the functions. I've also 
- probably commented too much but I felt for the assignment more was better than  less. Then there's the typedefs. I haven't removed the ones I created.
- 
- I'm really just experimenting when it comes to style so I'm hoping none of this is worth any marks deduction as long as what I've got is consistent.
- 
+
  Thanks,
  Michael.
 

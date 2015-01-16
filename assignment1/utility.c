@@ -18,9 +18,11 @@
 #define EXTRA_CHARS 2
 #define ENTER_LEN 1
 
-/* Tidy up residual data in stdin when encountering an error. You will 
+/* 
+ * Tidy up residual data in stdin when encountering an error. You will 
  * need to use this when there is a possibility that there will be 
- * leftover characters in the input buffer. */
+ * leftover characters in the input buffer.
+ */
 void read_rest_of_line(void)
 {
 	int ch;
@@ -31,8 +33,10 @@ void read_rest_of_line(void)
 	clearerr(stdin);
 }
 
-/* this function gets a string from the user and checks that it's of the
- * requested length. Length must not be larger than LINE_LEN. */
+/* 
+ * gets a string from the user and checks it's of the requested length.
+ * Length must not be larger than LINE_LEN.
+ */
 ERROR getString(char string[], unsigned length, char prompt[])
 {
 	ERROR error;
@@ -66,7 +70,7 @@ ERROR getString(char string[], unsigned length, char prompt[])
 	return error;
 }
 
-/* this function gets a press of the enter key from the user */
+/* gets a press of the enter key from the user */
 ERROR getEnter(void)
 {
 	ERROR error;
