@@ -16,37 +16,22 @@
 #define LABEL_LEN 1
 #define BOARD_DISPLAY_WIDTH BOARD_WIDTH + LABEL_LEN
 #define BOARD_DISPLAY_HEIGHT BOARD_HEIGHT + LABEL_LEN
-#define CELL_DISPLAY_WIDTH 4
-#define YAXIS_POS 0
-#define CELL_PADDING 1
-#define DEFAULT_SPACES 3
-#define YAXIS_PRINT_POS 2
-#define XAXIS_PRINT_POS 2
-#define LINE1 1
-#define LINE2 2
 
-void printRow(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum);
-void printBoarderLine(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
-		      int cellNum);
-void printCellLine(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
-void printDataCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
-void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
-void printSpaces(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum,
-		 int lineNum);
-void printYaxis(int row);
-void printXaxis(int column);
-void printpeg(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
-void printhole(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
-void printinvalid(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum);
-CELL_CONTENTS get_contents(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
-			  int cellNum);
-BOOLEAN is_close_cell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
-		      int cellNum);
+enum row_line { BORDER_LINE = 1, CELL_LINE };
+
+void print_boarder_line(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col);
+void print_cell_line(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col);
+void print_cell(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col);
+void print_spaces(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col,
+		 int line);
+CELL_CONTENTS get_contents(CELL_CONTENTS board[][BOARD_WIDTH], int row,
+			   int col);
 
 /* copies the master board to a local copy for each game */
 void init_board(enum cell_contents board[][BOARD_WIDTH])
 {
-	int i, j;
+	int i; /* row number */
+	int j; /* column number */
 
 	for (i = 0; i < BOARD_HEIGHT; ++i) {
 		for (j = 0; j < BOARD_WIDTH; ++j)
@@ -54,52 +39,50 @@ void init_board(enum cell_contents board[][BOARD_WIDTH])
 	}
 }
 
-/* display the game board to the screen. because we're including yaxis and xaxis
- * labels outside the board we iterate through a larger array of size
- * BOARD_DISPLAY_HEIGHT x BOARD_DISPLAY_WIDTH to include the labels.*/
+/* 
+ * displays the board. because we're including yaxis and xaxis labels we iterate
+ * through a larger array of size BOARD_DISPLAY_HEIGHT x BOARD_DISPLAY_WIDTH.
+ * we print two lines for each row - the boarder line and the cell line.
+ */
 void display_board(enum cell_contents board[][BOARD_WIDTH])
 {
-	int rowNum;
+	int i; /* row number */
+	int j; /* column number */
 
 	putchar('\n');
 
-	for (rowNum = 0; rowNum < BOARD_DISPLAY_HEIGHT; ++rowNum)
-		printRow(board, rowNum);
+	for (i = 0; i < BOARD_DISPLAY_HEIGHT; ++i) {
+		for (j = 0; j < BOARD_DISPLAY_WIDTH; ++j)
+			print_boarder_line(board, i, j);
+
+		putchar('\n');
+
+		for (j = 0; j < BOARD_DISPLAY_WIDTH; ++j)
+			print_cell_line(board, i, j);
+
+		putchar('\n');
+	}
 }
 
-/* print a row. each row in the board has multiple print lines, one for the
- * top boarder of a cell and one for the contents of the cell. also remember
- * that a row includes labels outside the game board. */
-void printRow(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum)
-{
-	int cellNum;
-
-	for (cellNum = 0; cellNum < BOARD_DISPLAY_WIDTH; ++cellNum)
-		printBoarderLine(board, rowNum, cellNum);
-
-	putchar('\n');
-
-	for (cellNum = 0; cellNum < BOARD_DISPLAY_WIDTH; ++cellNum)
-		printCellLine(board, rowNum, cellNum);
-
-	putchar('\n');
-}
-
-/* print the border line. we either need to print spaces or lines.
+/* 
+ * prints the border line. we either need to print spaces or lines.
  * we then need to print an extra character on the end of each row to complete
- * the line. */
-void printBoarderLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
-		       int cellNum)
+ * the line.
+ */
+void print_boarder_line (CELL_CONTENTS board[][BOARD_WIDTH], int row, int col)
 {
-	if ((get_contents(board, rowNum, cellNum) == INVALID)
-	    && get_contents(board, rowNum - 1, cellNum) == INVALID)
-		printSpaces(board, rowNum, cellNum, LINE1);
-	else
-		printLines(board, rowNum, cellNum);
+	if ((get_contents(board, row, col) == INVALID)
+	    && get_contents(board, row - 1, col) == INVALID) {
+		print_spaces(board, row, col, BORDER_LINE);
+	} else {
+		printf(COLOR_LINES);
+		printf("+---");
+		printf(COLOR_RESET);
+	}
 
-	if (cellNum == BOARD_DISPLAY_WIDTH - 1) {
-		if ((get_contents(board, rowNum, cellNum) == INVALID)
-		    && (get_contents(board, rowNum - 1, cellNum) == INVALID)) {
+	if (col == BOARD_DISPLAY_WIDTH - 1) {
+		if ((get_contents(board, row, col) == INVALID)
+		    && (get_contents(board, row - 1, col) == INVALID)) {
 			putchar(' ');
 		} else {
 			printf(COLOR_LINES);
@@ -109,25 +92,26 @@ void printBoarderLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
 	}
 }
 
-/* print the cell line. we either need to print yaxis labels, xaxis labels,
+/* 
+ * prints the cell line. we either need to print yaxis labels, xaxis labels,
  * pegs, holes, or spaces. we also need to print an extra character on the end
- * of each row to complete the line. */
-void printCellLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
+ * of each row to complete the line.
+ */
+void print_cell_line (CELL_CONTENTS board[][BOARD_WIDTH], int row, int col)
 {
-	if ((cellNum == YAXIS_POS) && (rowNum != BOARD_DISPLAY_HEIGHT - 1)) {
-		printYaxis(rowNum);
-	} else if (rowNum == BOARD_DISPLAY_HEIGHT - 1) {
-		if (cellNum == YAXIS_POS)
-			printSpaces(board, rowNum, cellNum, LINE2);
+	if ((col == 0) && (row != BOARD_DISPLAY_HEIGHT - 1)) {
+		printf("  %d ", row + Y_OFFSET);
+	} else if (row == BOARD_DISPLAY_HEIGHT - 1) {
+		if (col == 0)
+			print_spaces(board, row, col, CELL_LINE);
 		else
-			printXaxis(cellNum);
-	} else if ((cellNum != YAXIS_POS)
-		   && (rowNum != BOARD_DISPLAY_HEIGHT - 1)) {
-		printDataCell(board, rowNum, cellNum);
+			printf("  %c ", (char)(col - LABEL_LEN) + X_OFFSET);
+	} else if ((col != 0) && (row != BOARD_DISPLAY_HEIGHT - 1)) {
+		print_cell(board, row, col);
 	}
 
-	if (cellNum == BOARD_DISPLAY_WIDTH - 1) {
-		if (get_contents(board, rowNum, cellNum) != INVALID) {
+	if (col == BOARD_DISPLAY_WIDTH - 1) {
+		if (get_contents(board, row, col) != INVALID) {
 			printf(COLOR_LINES);
 			putchar('|');
 			printf(COLOR_RESET);
@@ -137,37 +121,45 @@ void printCellLine (CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
 	}
 }
 
-/* print the contents of a "data" cell (PEG, HOLE, INVALID) */
-void printDataCell(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
+/* prints the contents of a cell. */
+void print_cell(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col)
 {
-	switch (board[rowNum][cellNum - LABEL_LEN]) {
+	switch (get_contents(board, row, col)) {
 	case PEG :
-		printpeg(board, rowNum, cellNum);
+		printf(COLOR_LINES);
+		putchar('|');
+		putchar(' ');
+		printf(COLOR_PEG);
+		putchar('o');
+		putchar(' ');
+		printf(COLOR_RESET);
 		break;
 	case HOLE :
-		printhole(board, rowNum, cellNum);
+		printf(COLOR_LINES);
+		putchar('|');
+		putchar(' ');
+		printf(COLOR_HOLE);
+		putchar('.');
+		putchar(' ');
+		printf(COLOR_RESET);
 		break;
 	case INVALID :
-		printSpaces(board, rowNum, cellNum, LINE2);
+		print_spaces(board, row, col, CELL_LINE);
 		break;
 	}
 }
 
-/* print the boarder lines */
-void printLines(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
+/* 
+ * prints spaces. this is either for a border line or a cell line. we either
+ * need to print all spaces or subsitute the first space for the closing
+ * character of the previous cell.
+ */
+void print_spaces(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col,
+		  int line)
 {
-	printf(COLOR_LINES);
-	printf("+---");
-	printf(COLOR_RESET);
-}
-
-/* print spaces in the border */
-void printSpaces(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum,
-		 int lineNum)
-{
-	if (lineNum == LINE1) {
-		if ((get_contents(board, rowNum - 1, cellNum - 1) != INVALID)
-		    || (get_contents(board, rowNum, cellNum - 1) != INVALID)) {
+	if (line == BORDER_LINE) {
+		if ((get_contents(board, row - 1, col - 1) != INVALID)
+		    || (get_contents(board, row, col - 1) != INVALID)) {
 			printf(COLOR_LINES);
 			printf("+   ");
 			printf(COLOR_RESET);
@@ -176,7 +168,7 @@ void printSpaces(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum,
 		}
 	}
 	else {
-		if (get_contents(board, rowNum, cellNum -1) == INVALID) {
+		if (get_contents(board, row, col -1) == INVALID) {
 			printf("    ");
 		} else {
 			printf(COLOR_LINES);
@@ -186,58 +178,14 @@ void printSpaces(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum,
 	}
 }
 
-/* print the yaxis */
-void printYaxis(int row)
-{
-	printf("  %d ", row + Y_OFFSET);
-}
-
-/* print the xaxis */
-void printXaxis(int column)
-{
-	printf("  %c ", (char)(column - LABEL_LEN) + X_OFFSET);
-}
-
-/* print a peg in a cell */
-void printpeg(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
-{
-	printf(COLOR_LINES);
-	putchar('|');
-	putchar(' ');
-	printf(COLOR_PEG);
-	putchar('o');
-	putchar(' ');
-	printf(COLOR_RESET);
-}
-
-/* print a hole in a cell */
-void printhole(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
-{
-	printf(COLOR_LINES);
-	putchar('|');
-	putchar(' ');
-	printf(COLOR_HOLE);
-	putchar('.');
-	putchar(' ');
-	printf(COLOR_RESET);
-}
-
-/* print an invalid space in a cell */
-void printinvalid(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum, int cellNum)
-{
-	printf("    ");
-}
-
-/* return the contents of a cell. return invalid if out of range */
-CELL_CONTENTS get_contents(CELL_CONTENTS board[][BOARD_WIDTH], int rowNum,
-			  int cellNum)
+/* returns the contents of a cell. returns invalid if out of range */
+CELL_CONTENTS get_contents(CELL_CONTENTS board[][BOARD_WIDTH], int row, int col)
 {
 	CELL_CONTENTS contents = INVALID;
 
-	if ((rowNum >= 0 && rowNum < BOARD_HEIGHT)
-	    && (cellNum > 0 && cellNum <= BOARD_WIDTH))
-	{
-		switch (board[rowNum][cellNum - LABEL_LEN]) {
+	if ((row >= 0 && row < BOARD_HEIGHT)
+	    && (col > 0 && col <= BOARD_WIDTH)) {
+		switch (board[row][col - LABEL_LEN]) {
 		case PEG :
 			contents = PEG;
 			break;

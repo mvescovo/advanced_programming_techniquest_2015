@@ -101,7 +101,8 @@ int getSelection(void)
 
 	do {
 		/* get input from the user and put it in line */
-		if (!getString(line, MENU_INPUT_LEN, "Enter selection: ")) {
+		if (getString(line, MENU_INPUT_LEN, "Enter selection: ")
+		    != SUCCESS) {
 			printf("\nNo characters entered, ");
 			continue;
 		}

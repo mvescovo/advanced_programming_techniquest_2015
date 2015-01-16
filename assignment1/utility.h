@@ -16,13 +16,15 @@ typedef enum {
 	FALSE, TRUE
 } BOOLEAN;
 
+typedef enum { FAIL = -1, SUCCESS = 0 } ERROR;
+
 /* clears residual data from stdin */
 void read_rest_of_line(void);
 
 /* get a string from the user, checking for buffer overflow */
-BOOLEAN getString(char string[], unsigned length, char prompt[]);
+ERROR getString(char string[], unsigned length, char prompt[]);
 
 /* get an enter press of the keyboard */
-void getEnter(void);
+ERROR getEnter(void);
 
 #endif

@@ -32,55 +32,57 @@ void read_rest_of_line(void)
 }
 
 /* this function gets a string from the user and checks that it's of the
- * requested length */
-BOOLEAN getString(char string[], unsigned length, char prompt[])
+ * requested length. Length must not be larger than LINE_LEN. */
+ERROR getString(char string[], unsigned length, char prompt[])
 {
+	ERROR error;
 	char line[LINE_LEN + EXTRA_CHARS];
-	BOOLEAN success = FALSE;
 
 	assert(length <= LINE_LEN);
 
 	do {
 		printf("%s", prompt);
 
-		/* read in characters */
-		if (fgets(line , length + EXTRA_CHARS, stdin) == NULL)
-			return FALSE;
+		if (fgets(line , length + EXTRA_CHARS, stdin) == NULL) {
+			error = FAIL;
+			break;
+		}
 
-		/* validate input */
 		if (line[strlen(line) - 1] != '\n') {
-			/* buffer overflow */
 			puts("\nToo many characters entered.");
 			read_rest_of_line();
 			continue;
 		}
 
-		/* remove newline character */
 		line[strlen(line) -1] = '\0';
 
-		success = TRUE;
+		error = SUCCESS;
 
-	} while (!success);
+	} while (error != SUCCESS);
 
-	strcpy(string, line);
-	return TRUE;
+	if (error == SUCCESS)
+		strcpy(string, line);
+
+	return error;
 }
 
 /* this function gets a press of the enter key from the user */
-void getEnter(void)
+ERROR getEnter(void)
 {
+	ERROR error;
 	char enter[ENTER_LEN + EXTRA_CHARS];
-	BOOLEAN success;
 
 	do {
-		if (!getString(enter, ENTER_LEN, "Press Enter to return to "
-			       "menu.")) {
+		if (getString(enter, ENTER_LEN, "Press Enter to return to "
+			       "menu.") != SUCCESS) {
 			putchar('\n');
-			success = FALSE;
+			error = FAIL;
 		} else if (enter[0] != '\0') {
-			success = FALSE;
+			error = FAIL;
 		} else {
-			success = TRUE;
+			error = SUCCESS;
 		}
-	} while (!success);
+	} while (error != SUCCESS);
+
+	return error;
 }
