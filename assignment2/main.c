@@ -21,9 +21,8 @@
 int get_selection(void);
 
 /* 
- * start the program. check argument count matches NUM_DATA_FILES + 1.
- * initialise and then display the menu. get user selection and run accociated
- * function.
+ * start the program. check argument count matches NUM_DATA_FILES + 1 (for the
+ * executable). initialise and then display the menu. get user selection and run accociated function. if the function returns false quit the program.
  */
 int main(int argc, char * argv[])
 {
@@ -38,6 +37,11 @@ int main(int argc, char * argv[])
 		return EXIT_SUCCESS;
 	}
 
+	if (ets_init(&ets) == FALSE) {
+		puts("\nFailed to initialise ETS data structure, "
+		     "program quit.\n");
+		return EXIT_SUCCESS;
+	}
 
 	menu_init(menu);
 
@@ -58,7 +62,6 @@ int main(int argc, char * argv[])
     UNUSED(ets);
 
     /* List of things to do in this function: */
-    /* check command line arguments */
     /* initialise data structures */
     /* load data */
     /* if the data is valid and has loaded correctly then

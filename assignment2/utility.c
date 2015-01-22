@@ -29,12 +29,10 @@ void read_rest_of_line(void)
         clearerr(stdin);
 }
 
-/* initialises the ets data structure to safe initial values. */
+/* initialises the ets data structure to safe initial values. if there is a
+ * problem it returns FALSE. */
 BOOLEAN ets_init(struct ets * ets)
 {
-        /* The UNUSED() function is designed to prevent warnings while
-         * your code is only partially complete. Delete this function
-         * call once you are using your own code */
         UNUSED(ets);
         return FALSE;
 }
