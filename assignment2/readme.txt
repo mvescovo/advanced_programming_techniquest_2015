@@ -17,9 +17,9 @@
 
  I've renamed all the files without the "ets" prefix. I couldn't think of a
  good reason why this would be helpful and in fact for me it was making it
- difficult. It seems to be redundant info. Should I be working on a large enough program that I need to differentiate similar named files I would place them in  different appropriately name directories. More experience may change my mind on this but for this assignment I know what program I'm working on. It says we can remove modules and add modules and this implies we can change their names.
+ difficult. It seems to be redundant info. Should I be working on a large enough program that I need to differentiate similar named files I would place them in  different appropriately nameed directories. More experience may change my mind  on this but for this assignment I know what program I'm working on. It says we  can remove modules and add modules and this implies we can change their names.
 
-
+ I've moved all the struct definitions inside .c files to make them hidden from  other modules. Structures are now only accessible via public functions.
 
 
 

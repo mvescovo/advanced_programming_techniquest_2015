@@ -15,7 +15,7 @@ CFLAGS=-ansi -pedantic -Wall -g -c
 
 all: ets
 
-ets: main.o menu.o options.o utility.o
+ets: main.o menu.o options.o utility.o type.h
 	$(CC) $^ -o $@
 
 main.o: main.c

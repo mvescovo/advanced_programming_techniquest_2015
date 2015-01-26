@@ -1,24 +1,26 @@
 /***********************************************************************
  * COSC1076 - Advanced Programming Techniques
  * Summer 2015 Assignment #2
- * Full Name        : EDIT HERE
- * Student Number   : EDIT HERE
- * Course Code      : EDIT HERE
- * Program Code     : EDIT HERE
+ * Full Name        : Michael Vescovo
+ * Student Number   : s3459317
+ * Course Code      : COSC1076
+ * Program Code     : BP094
  * Start up code provided by David Shaw
  * Based on 2014 code by Paul Miller and Virginia King
  **********************************************************************/
+
 #include "utility.h"
-#include "type.h"
-#include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include "type.h"
 
 #define EXTRA_CHARS 2 /* extra characters for '\n' and '\0' in buffer */
 #define EXTRA_CHAR 1 /* extra character for '\0' on returned string */
-#define BUF 20 /* size of buffer for get_string function */
+#define BUF 80 /* size of buffer for get_string function */
 #define INT_BUF 10 /* size of buffer for get_int function */
+#define ID_LEN 5
+#define NAME_LEN 31
 
 /* clears the input buffer. */
 void read_rest_of_line(void)
@@ -29,54 +31,22 @@ void read_rest_of_line(void)
         clearerr(stdin);
 }
 
-/* initialises the ets data structure to safe initial values. if there is a
- * problem it returns FALSE. */
-BOOLEAN ets_init(struct ets * ets)
-{
-        UNUSED(ets);
-        return FALSE;
-}
-
-/* loads data from the .dat files into memory. */
-BOOLEAN load_data(struct ets * ets,
-        const char * equip_fname,
-        const char * member_fname,
-        const char * loan_fname)
-{
-        /* The UNUSED() function is designed to prevent warnings while
-         * your code is only partially complete. Delete this function
-         * call once you are using your own code */
-        UNUSED(ets);
-        UNUSED(equip_fname);
-        UNUSED(member_fname);
-        UNUSED(loan_fname); 
-        return FALSE;
-}
-
-/* frees all dynamically allocated data. */
-void ets_free(struct ets * ets)
-{
-        /* The UNUSED() function is designed to prevent warnings while
-         * your code is only partially complete. Delete this function
-         * call once you are using your own code */
-        UNUSED(ets);
-}
-
 /* 
  * gets a string from the user. if ctrl+d was entered it returns with a "CTRL_D"
  * error. a valid string must have a newline charater. the newline character is
  * replaced with the end of string sentinal '\0'. if more than BUF characters
  * are entered the user is prompted to re-enter the string.
  */
-ERROR get_string(char string[], int length, char prompt[])
+ERROR get_string(char string[], int length, FILE *fp, char prompt[])
 {
 	char buf[BUF + EXTRA_CHARS];
 	ERROR error;
 
 	do {
-		printf("%s", prompt);
+		if (prompt != NULL)
+			printf("%s", prompt);
 
-		if (fgets(buf, sizeof(buf), stdin) == NULL) {
+		if (fgets(buf, sizeof(buf), fp) == NULL) {
 			error = CTRL_D;
 		} else if (buf[strlen(buf) - 1] == '\n') {
 			if (strlen(buf) < (length + EXTRA_CHARS)) {
@@ -109,7 +79,7 @@ ERROR get_int(int *i, int min, int max, char prompt[])
 	ERROR error;
 
 	do {
-		if (get_string(string, INT_BUF, prompt) == CTRL_D) {
+		if (get_string(string, INT_BUF, stdin, prompt) == CTRL_D) {
 			error = CTRL_D;
 			break;
 		}

@@ -1,35 +1,41 @@
 /***********************************************************************
  * COSC1076 - Advanced Programming Techniques
  * Summer 2015 Assignment #2
- * Full Name        : EDIT HERE
- * Student Number   : EDIT HERE
- * Course Code      : EDIT HERE
- * Program Code     : EDIT HERE
+ * Full Name        : Michael Vescovo
+ * Student Number   : s3459317
+ * Course Code      : COSC1076
+ * Program Code     : BP094
  * Start up code provided by David Shaw
  * Based on 2014 code by Paul Miller and Virginia King
  **********************************************************************/
 
 #include "type.h"
+#include "options.h"
 
-#ifndef ETS_MENU
-#define ETS_MENU
+#ifndef MENU_H
+#define MENU_H
 
 /* set this to the number of menu items */
 #define NUM_MENU_ITEMS 13
 #define ITEM_NAME_LEN 63
+/* minimum valid menu option */
+#define MIN_MENU_OPT 1
 
-/* The data structure to hold information about each menu option, the 
- * name of the function to display and a pointer to the function that 
- * will implement that option. */
-struct menu_item
-{
-	char name[ITEM_NAME_LEN+1];
-	BOOLEAN (*func)(struct ets *);
-};
+/* pointer to incomplete datatype */
+typedef struct menu_item *MENU_PTR;
+
+/* gets a menu selection from the user */
+int get_selection(void);
 
 /* builds the menu for the prototype */
-void menu_init(struct menu_item *);
+MENU_PTR create_menu(void);
 
-/* display the ETS menu */
-void display_menu(struct menu_item *menu);
+/* display the menu */
+void display_menu(MENU_PTR menu_ptr);
+
+/* select a menu option */
+BOOLEAN select_option(MENU_PTR menu_ptr, int selection, ETS_PTR ets_ptr);
+
+/* destroy the menu */
+void destroy_menu(MENU_PTR menu_ptr);
 #endif
