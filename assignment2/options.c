@@ -64,6 +64,8 @@ void destroy_list_node(struct list_node *list_node);
 void destroy_data(struct data *data);
 void display_headings(char *heading, char *title1, char *title2,
 		      char *title3, char *title4);
+struct list_node * find_equip(struct list *loan_list_ptr, char *equip_id);
+int get_avail(struct list_node *list_node_ptr, struct list *loan_list);
 
 /* creates and initialises a new struct ets and returns a pointer */
 ETS_PTR create_ets(void)
@@ -232,11 +234,64 @@ BOOLEAN display_equipment(ETS_PTR ets_ptr)
 		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
 		printf("%*s", -NAME_LEN, (char *)data_ptr->data2);
 		printf("%*s", -NUM_ITEMS_LEN, (char *)data_ptr->data3);
-		printf("%*s\n", -NUM_ITEMS_LEN, (char *)data_ptr->data3);
+		printf("%*d\n", -NUM_ITEMS_LEN,
+		       get_avail(current, &ets_ptr->loan));
 		current = current->next;
 	}
 
 	return FALSE;
+}
+
+/* get available items in equip list node */
+int get_avail(struct list_node *list_node_ptr, struct list *loan_list)
+{
+	int avail;
+	int total;
+	int on_loan;
+	char *total_str;
+	char *on_loan_str;
+	struct data *data_ptr_equip;
+	struct list_node *loan_node_ptr;
+	struct data *data_ptr_loan;
+	char *end;
+
+	data_ptr_equip = (struct data *)list_node_ptr->data;
+	total_str = (char *)data_ptr_equip->data3;
+	loan_node_ptr = find_equip(loan_list, data_ptr_equip->data1);
+
+	if (loan_node_ptr == NULL) {
+		on_loan = 0;
+	} else {
+		data_ptr_loan = (struct data *)loan_node_ptr->data;
+		on_loan_str = (char *)data_ptr_loan->data3;
+		on_loan = strtol(on_loan_str, &end, 10);
+	}
+
+	total = strtol(total_str, &end, 10);
+	avail = total - on_loan;
+
+	return avail;
+}
+
+/* search a loan list by equipID and return a pointer to the struct list_node */
+struct list_node * find_equip(struct list *loan_list_ptr, char *equip_id)
+{
+	struct list_node *current = loan_list_ptr->head;
+	struct data *data_ptr;
+
+	while (current != NULL) {
+		data_ptr = (struct data *)current->data;
+		if (strcmp((char *)data_ptr->data2, equip_id) == 0) {
+			break;
+		} else {
+			current = current->next;
+		}
+	}
+
+	if (current == NULL)
+		return NULL;
+	else
+		return current;
 }
 
 /* display list headings */

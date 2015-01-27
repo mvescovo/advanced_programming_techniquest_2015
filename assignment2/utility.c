@@ -26,7 +26,7 @@
 void read_rest_of_line(void)
 {
         int ch;
-        while(ch = getc(stdin), ch!='\n' && ch != EOF) 
+        while(ch = getc(stdin), ch!='\n' && ch != EOF)
                 ;
         clearerr(stdin);
 }
