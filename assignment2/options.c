@@ -409,6 +409,7 @@ BOOLEAN display_loans(ETS_PTR ets_ptr)
 	struct list_node *member_node_ptr = ets_ptr->mem.head;
 	struct data *data_ptr;
 	char full_name[NAME_LEN * 2] = "";
+	char equip_lines[NAME_LEN * 2] = "";
 
 	display_headings("Loan List", "ID", "Name", "# Lent",
 			 NULL);
@@ -421,10 +422,17 @@ BOOLEAN display_loans(ETS_PTR ets_ptr)
 		memset(full_name, 0, strlen(full_name) + 1);
 		printf("%*d\n", -NUM_ITEMS_LEN,
 		       get_lent(current, &ets_ptr->loan));
+		printf("%*s", -ID-LEN + 1, equip_lines);
 		current = current->next;
 	}
 
 	return FALSE;
+}
+
+/* get equipment lines */
+void get_equip_lines(char *id, int lent, struct list *equip_list_ptr )
+{
+
 }
 
 /* get a full name from the member list */
