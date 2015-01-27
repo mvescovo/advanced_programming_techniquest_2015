@@ -15,10 +15,14 @@
 #include <string.h>
 #include "type.h"
 #include "utility.h"
+#include <assert.h>
 
 #define NUM_FILES 3 /* number of files to be loaded */
 #define LINE_LEN 80 /* length of a line from a file */
 #define DELIMS "|" /* delimeters for lines in a file */
+#define ID_LEN 8
+#define NAME_LEN 31
+#define NUM_ITEMS_LEN 6
 
 /* generic data structure */
 struct data {
@@ -31,7 +35,6 @@ struct data {
 struct list_node {
 	void *data;
 	struct list_node *next;
-	struct list_node *previous;
 };
 
 /* generic list */
@@ -54,9 +57,13 @@ ERROR load_tokens(struct data *data_ptr, char *line);
 struct list_node * create_list_node(void);
 struct data * create_data(void);
 void add_node(struct list_node **head_ptr_ptr, struct list_node *list_node_ptr);
-void display_node(struct list_node *list_node);
 int cmp_nodes(struct list_node *list_node_ptr1,
 	      struct list_node *list_node_ptr2);
+void destroy_list(struct list *list);
+void destroy_list_node(struct list_node *list_node);
+void destroy_data(struct data *data);
+void display_headings(char *heading, char *title1, char *title2,
+		      char *title3, char *title4);
 
 /* creates and initialises a new struct ets and returns a pointer */
 ETS_PTR create_ets(void)
@@ -147,7 +154,6 @@ struct list_node * create_list_node(void)
 	struct list_node *list_node_ptr = malloc(sizeof(struct list_node));
 
 	list_node_ptr->next = NULL;
-	list_node_ptr->previous = NULL;
 	list_node_ptr->data = create_data();
 
 	return list_node_ptr;
@@ -165,34 +171,36 @@ struct data * create_data(void)
 	return data_ptr;
 }
 
-/* add a list_node to a list, sorted by data2 */
+/* adds a struct list_node to a struct list in sorted order using cmp_nodes. */
 void add_node(struct list_node **head_ptr_ptr, struct list_node *list_node_ptr)
 {
-	struct list_node *temp_ptr;
+	struct list_node *current = *head_ptr_ptr;
+	struct list_node *previous = NULL;
 
 	if (*head_ptr_ptr == NULL) {
 		*head_ptr_ptr = list_node_ptr;
-	} else if (*head_ptr_ptr->next 
-#if 0
-	if (*head_ptr_ptr == NULL) {
-		*head_ptr_ptr = list_node_ptr;
-	} else if (cmp_nodes(*head_ptr_ptr, list_node_ptr) <= 0) {
-		add_node(&((*head_ptr_ptr)->next), list_node_ptr);
 	} else {
-		temp_ptr = *head_ptr_ptr;
-		*head_ptr_ptr = list_node_ptr;
-		list_node_ptr->next = temp_ptr;
+		while (current != NULL
+		       && cmp_nodes(current, list_node_ptr) < 0) {
+			previous = current;
+			current = current->next;
+		}
+
+		if (previous == NULL) {
+			list_node_ptr->next = *head_ptr_ptr;
+			*head_ptr_ptr = list_node_ptr;
+		} else {
+			list_node_ptr->next = current;
+			previous->next = list_node_ptr;
+		}
 	}
-#endif
 }
 
-struct list_node * find_position(void)
-{
-	if (cmp_nodes(*head_ptr_ptr, list_node_ptr) < 0)
-		return *head_ptr_ptr->next;
-}
-
-/* compare nodes */
+/* 
+ * compares nodes based on the value of data2 in the node's struct data. returns
+ * less than 0 for the first paramater being smaller, 0 for it being equal, or 1
+ * for it being greater.
+ */
 int cmp_nodes(struct list_node *list_node_ptr1,
 	      struct list_node *list_node_ptr2)
 {
@@ -213,27 +221,56 @@ int cmp_nodes(struct list_node *list_node_ptr1,
 /* display the entire equipment list */
 BOOLEAN display_equipment(ETS_PTR ets_ptr)
 {
-	puts("\nEquipment List");
-	puts("--------------");
-	puts("ID	Name				Total	Avail.");
-	puts("--------------------------------------------------------");
-	display_node(ets_ptr->equip.head);
+	struct list_node *current = ets_ptr->equip.head;
+	struct data *data_ptr;
+
+	display_headings("Equipment List", "ID", "Name", "Total",
+			 "Avail.");
+
+	while (current != NULL) {
+		data_ptr = (struct data *)current->data;
+		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
+		printf("%*s", -NAME_LEN, (char *)data_ptr->data2);
+		printf("%*s", -NUM_ITEMS_LEN, (char *)data_ptr->data3);
+		printf("%*s\n", -NUM_ITEMS_LEN, (char *)data_ptr->data3);
+		current = current->next;
+	}
 
 	return FALSE;
 }
 
-/* display a node in the list */
-void display_node(struct list_node *list_node)
+/* display list headings */
+void display_headings(char *heading, char *title1, char *title2,
+		      char *title3, char *title4)
 {
-	struct data *data_ptr;
+	int i;
+	int num_dashes = 0;
 
-	if (list_node != NULL) {
-		data_ptr = (struct data*)list_node->data;
-		printf("%s\t", (char *)data_ptr->data1);
-		printf("%s\t", (char *)data_ptr->data2);
-		printf("%s\n", (char *)data_ptr->data3);
-		display_node(list_node->next);
+	putchar('\n');
+	puts(heading);
+	for (i = 0; i < strlen(heading); ++i)
+		putchar('-');
+	putchar('\n');
+	if (title1 != NULL) {
+		printf("%*s", -ID_LEN, title1);
+		num_dashes += ID_LEN;
 	}
+	if (title2 != NULL) {
+		printf("%*s", -NAME_LEN, title2);
+		num_dashes += NAME_LEN;
+	}
+	if (title3 != NULL) {
+		printf("%*s", -NUM_ITEMS_LEN, title3);
+		num_dashes += NUM_ITEMS_LEN;
+	}
+	if (title4 != NULL) {
+		printf("%*s", -NUM_ITEMS_LEN, title4);
+		num_dashes += NUM_ITEMS_LEN;
+	}
+	putchar('\n');
+	for (i = 0; i < num_dashes; ++i)
+		putchar('-');
+	putchar('\n');
 }
 
 BOOLEAN loan_equipment(ETS_PTR ets_ptr)
@@ -254,21 +291,15 @@ BOOLEAN query_member(ETS_PTR ets_ptr)
 }
 BOOLEAN display_members(ETS_PTR ets_ptr)
 {
-	puts("\nMember List");
-	puts("--------------");
-	puts("ID	Name					# Lent");
-	puts("--------------------------------------------------------");
-	display_node(ets_ptr->mem.head);
+	display_headings("Member List", "ID", "Name", "# Lent",
+			 NULL);
 
 	return FALSE;
 }
 BOOLEAN display_loans(ETS_PTR ets_ptr)
 {
-	puts("\nLoan List");
-	puts("--------------");
-	puts("ID	Name					# Lent");
-	puts("--------------------------------------------------------");
-	display_node(ets_ptr->loan.head);
+	display_headings("Loan List", "ID", "Name", "# Lent",
+			 NULL);
 
 	return FALSE;
 }
@@ -297,8 +328,40 @@ BOOLEAN quit(ETS_PTR ets_ptr)
         return TRUE;
 }
 
-/* frees all dynamically allocated data. */
+/* frees dynamically allocated data for a struct ets. */
 void destroy_ets(ETS_PTR ets_ptr)
 {
+	destroy_list(&ets_ptr->equip);
+	destroy_list(&ets_ptr->mem);
+	destroy_list(&ets_ptr->loan);
 	free(ets_ptr);
+}
+
+/* frees dynamically allocated data for a struct list. */
+void destroy_list(struct list *list)
+{
+	struct list_node *current = list->head;
+	struct list_node *next;
+
+	while (current != NULL) {
+		next = current->next;
+		destroy_list_node(current);
+		current = next;
+	}
+}
+
+/* frees dynamically allocated data for a struct list_node. */
+void destroy_list_node(struct list_node *list_node)
+{
+	destroy_data(list_node->data);
+	free(list_node->data);
+	free(list_node);
+}
+
+/* frees dynamically allocated data for a struct data. */
+void destroy_data(struct data *data)
+{
+	free(data->data1);
+	free(data->data2);
+	free(data->data3);
 }
