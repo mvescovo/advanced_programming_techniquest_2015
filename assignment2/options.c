@@ -68,6 +68,9 @@ struct list_node * find_node_id(struct list *loan_list_ptr, char *id);
 int get_avail(struct list_node *list_node_ptr, struct list *loan_list);
 int get_lent(struct list_node *list_node_ptr, struct list *loan_list);
 void get_full_name(char *full_name, struct list *mem_list, char *id);
+void get_equip_lines(char *equip_lines, char *mem_id, struct list *loan_list,
+		     struct list *equip_list);
+void get_equip_name(char *equip_name, char *equip_id, struct list *equip_list);
 
 /* creates and initialises a new struct ets and returns a pointer */
 ETS_PTR create_ets(void)
@@ -82,6 +85,29 @@ ETS_PTR create_ets(void)
 	ets_ptr->loan.size = 0;
 
 	return ets_ptr;
+}
+
+/* creates and initialises a new struct list_node and returns a pointer */
+struct list_node * create_list_node(void)
+{
+	struct list_node *list_node_ptr = malloc(sizeof(struct list_node));
+
+	list_node_ptr->next = NULL;
+	list_node_ptr->data = create_data();
+
+	return list_node_ptr;
+}
+
+/* creates and initialises a new struct data and returns a pointer */
+struct data * create_data(void)
+{
+	struct data *data_ptr = malloc(sizeof(struct data));
+
+	data_ptr->data1 = NULL;
+	data_ptr->data2 = NULL;
+	data_ptr->data3 = NULL;
+
+	return data_ptr;
 }
 
 /* loads data from files into a struct ets, one list at a time. */
@@ -152,50 +178,27 @@ ERROR load_tokens(struct data *data_ptr, char *line)
 	return SUCCESS;
 }
 
-/* creates and initialises a new struct list_node and returns a pointer */
-struct list_node * create_list_node(void)
-{
-	struct list_node *list_node_ptr = malloc(sizeof(struct list_node));
-
-	list_node_ptr->next = NULL;
-	list_node_ptr->data = create_data();
-
-	return list_node_ptr;
-}
-
-/* creates and initialises a new struct data and returns a pointer */
-struct data * create_data(void)
-{
-	struct data *data_ptr = malloc(sizeof(struct data));
-
-	data_ptr->data1 = NULL;
-	data_ptr->data2 = NULL;
-	data_ptr->data3 = NULL;
-
-	return data_ptr;
-}
-
 /* adds a struct list_node to a struct list in sorted order using cmp_nodes. */
-void add_node(struct list_node **head_ptr_ptr, struct list_node *list_node_ptr)
+void add_node(struct list_node **head_ptr_ptr, struct list_node *new_node_ptr)
 {
-	struct list_node *current = *head_ptr_ptr;
-	struct list_node *previous = NULL;
+	struct list_node *current_ptr = *head_ptr_ptr;
+	struct list_node *previous_ptr = NULL;
 
-	if (*head_ptr_ptr == NULL) {
-		*head_ptr_ptr = list_node_ptr;
+	if (current_ptr == NULL) {
+		*head_ptr_ptr = new_node_ptr;
 	} else {
-		while (current != NULL
-		       && cmp_nodes(current, list_node_ptr) < 0) {
-			previous = current;
-			current = current->next;
+		while (current_ptr != NULL
+		       && cmp_nodes(current_ptr, new_node_ptr) < 0) {
+			previous_ptr = current_ptr;
+			current_ptr = current_ptr->next;
 		}
 
-		if (previous == NULL) {
-			list_node_ptr->next = *head_ptr_ptr;
-			*head_ptr_ptr = list_node_ptr;
+		if (previous_ptr == NULL) {
+			new_node_ptr->next = *head_ptr_ptr;
+			*head_ptr_ptr = new_node_ptr;
 		} else {
-			list_node_ptr->next = current;
-			previous->next = list_node_ptr;
+			new_node_ptr->next = current_ptr;
+			previous_ptr->next = new_node_ptr;
 		}
 	}
 }
@@ -225,106 +228,150 @@ int cmp_nodes(struct list_node *list_node_ptr1,
 /* display the entire equipment list */
 BOOLEAN display_equipment(ETS_PTR ets_ptr)
 {
-	struct list_node *current = ets_ptr->equip.head;
+	struct list_node *current_ptr = ets_ptr->equip.head;
 	struct data *data_ptr;
 
 	display_headings("Equipment List", "ID", "Name", "Total",
 			 "Avail.");
 
-	while (current != NULL) {
-		data_ptr = (struct data *)current->data;
+	while (current_ptr != NULL) {
+		data_ptr = (struct data *)current_ptr->data;
 		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
 		printf("%*s", -NAME_LEN, (char *)data_ptr->data2);
 		printf("%*s", -NUM_ITEMS_LEN, (char *)data_ptr->data3);
 		printf("%*d\n", -NUM_ITEMS_LEN,
-		       get_avail(current, &ets_ptr->loan));
+		       get_avail(current_ptr, &ets_ptr->loan));
+		current_ptr = current_ptr->next;
+	}
+
+	return FALSE;
+}
+
+/* display the entire members list */
+BOOLEAN display_members(ETS_PTR ets_ptr)
+{
+	struct list_node *current = ets_ptr->mem.head;
+	struct data *data_ptr;
+
+	display_headings("Member List", "ID", "Name", "# Lent",
+			 NULL);
+
+	while (current != NULL) {
+		int name_width;
+		data_ptr = (struct data *)current->data;
+		name_width = NAME_LEN - (strlen(data_ptr->data3) + 1);
+		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
+		printf("%s ", (char *)data_ptr->data3);
+		printf("%*s", -name_width, (char *)data_ptr->data2);
+		printf("%*d\n", -NUM_ITEMS_LEN,
+		       get_lent(current, &ets_ptr->loan));
 		current = current->next;
 	}
 
 	return FALSE;
 }
 
-/* 
- * get the number of available items for a struct list_node in the equipment
- * list.
- */
-int get_avail(struct list_node *list_node_ptr, struct list *loan_list)
+/* display the entire loans list */
+BOOLEAN display_loans(ETS_PTR ets_ptr)
 {
-	int avail;
-	int total;
-	int on_loan;
-	char *total_str;
-	char *on_loan_str;
-	struct data *data_ptr_equip;
-	struct list_node *loan_node_ptr;
-	struct data *data_ptr_loan;
-	char *end;
-
-	data_ptr_equip = (struct data *)list_node_ptr->data;
-	total_str = (char *)data_ptr_equip->data3;
-	loan_node_ptr = find_node_id(loan_list, data_ptr_equip->data1);
-
-	if (loan_node_ptr == NULL) {
-		on_loan = 0;
-	} else {
-		data_ptr_loan = (struct data *)loan_node_ptr->data;
-		on_loan_str = (char *)data_ptr_loan->data3;
-		on_loan = strtol(on_loan_str, &end, 10);
-	}
-
-	total = strtol(total_str, &end, 10);
-	avail = total - on_loan;
-
-	return avail;
-}
-
-/* get the number of items on loan for a struct list_node in the member list. */
-int get_lent(struct list_node *list_node_ptr, struct list *loan_list)
-{
-	int lent = 0;
-	char *lent_str;
-	struct list_node *loan_node_ptr = loan_list->head;
-	struct data *mem_data_ptr;
-	struct data *loan_data_ptr;
-	char *end;
-
-	mem_data_ptr = (struct data *)list_node_ptr->data;
-
-	while (loan_node_ptr != NULL) {
-		loan_data_ptr = (struct data *)loan_node_ptr->data;
-
-		if (strcmp((char *)loan_data_ptr->data1,
-			   (char *)mem_data_ptr->data1) == 0) {
-			lent_str = (char *)loan_data_ptr->data3;
-			lent += strtol(lent_str, &end, 10);
-		}
-
-		loan_node_ptr = loan_node_ptr->next;
-	}
-
-	return lent;
-}
-
-/* search a loan list by ID and return a pointer to the struct list_node */
-struct list_node * find_node_id(struct list *loan_list_ptr, char *id)
-{
-	struct list_node *current = loan_list_ptr->head;
+	struct list_node *current = ets_ptr->loan.head;
 	struct data *data_ptr;
+	char full_name[NAME_LEN * 2] = "";
+	char equip_lines[LINE_LEN * 2] = "";
+
+	display_headings("Loan List", "ID", "Name", "# Lent",
+			 NULL);
 
 	while (current != NULL) {
 		data_ptr = (struct data *)current->data;
-		if (strcmp((char *)data_ptr->data1, id) == 0
-		    || strcmp((char *)data_ptr->data2, id) == 0) {
-			break;
-		} else {
-			current = current->next;
-		}
+		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
+		get_full_name(full_name, &ets_ptr->mem, data_ptr->data1);
+		printf("%*s ", -NAME_LEN, full_name);
+		memset(full_name, 0, strlen(full_name) + 1);
+		printf("%*d\n", -NUM_ITEMS_LEN,
+		       get_lent(current, &ets_ptr->loan));
+		get_equip_lines(equip_lines, data_ptr->data1, &ets_ptr->loan,
+				&ets_ptr->equip);
+		printf("%*s", -ID_LEN + 1, equip_lines);
+		memset(full_name, 0, strlen(equip_lines) + 1);
+		current = current->next;
 	}
 
-	if (current == NULL)
-		return NULL;
-	else
-		return current;
+	return FALSE;
+}
+
+/* display the loan details for a member id */
+BOOLEAN query_member(ETS_PTR ets_ptr)
+{
+	struct list_node *current = ets_ptr->loan.head;
+	struct data *data_ptr;
+	char full_name[NAME_LEN * 2] = "";
+	char equip_lines[LINE_LEN * 2] = "";
+
+	display_headings("Loan List", "ID", "Name", "# Lent",
+			 NULL);
+
+	while (current != NULL) {
+		data_ptr = (struct data *)current->data;
+		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
+		get_full_name(full_name, &ets_ptr->mem, data_ptr->data1);
+		printf("%*s ", -NAME_LEN, full_name);
+		memset(full_name, 0, strlen(full_name) + 1);
+		printf("%*d\n", -NUM_ITEMS_LEN,
+		       get_lent(current, &ets_ptr->loan));
+		get_equip_lines(equip_lines, data_ptr->data1, &ets_ptr->loan,
+				&ets_ptr->equip);
+		printf("%*s", -ID_LEN + 1, equip_lines);
+		memset(full_name, 0, strlen(equip_lines) + 1);
+		current = current->next;
+	}
+
+	return FALSE;
+}
+
+/* display the member details for an equip id */
+BOOLEAN query_equipment(ETS_PTR ets_ptr)
+{
+        return FALSE;
+}
+
+/* 
+ * get input from user and then loan equipment and call query_member to display
+ * the members loans.
+ */
+BOOLEAN loan_equipment(ETS_PTR ets_ptr)
+{
+	return FALSE;
+}
+
+/* return equipmet */
+BOOLEAN return_equipment(ETS_PTR ets_ptr)
+{
+        return FALSE;
+}
+
+/* add new equipment */
+BOOLEAN add_equipment(ETS_PTR ets_ptr)
+{
+        return FALSE;
+}
+
+/* change equipment */
+BOOLEAN change_equipment(ETS_PTR ets_ptr)
+{
+        return FALSE;
+}
+
+/* add member */
+BOOLEAN add_member(ETS_PTR ets_ptr)
+{
+        return FALSE;
+}
+
+/* delete member */
+BOOLEAN delete_member(ETS_PTR ets_ptr)
+{
+        return FALSE;
 }
 
 /* display list headings */
@@ -361,78 +408,117 @@ void display_headings(char *heading, char *title1, char *title2,
 	putchar('\n');
 }
 
-BOOLEAN loan_equipment(ETS_PTR ets_ptr)
+/* 
+ * get the number of available items for a struct list_node in the equipment
+ * list.
+ */
+int get_avail(struct list_node *equip_node_ptr, struct list *loan_list)
 {
-	return FALSE;
-}
-BOOLEAN return_equipment(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
-BOOLEAN query_equipment(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
-BOOLEAN query_member(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
+	int avail = 0;
+	int total = 0;
+	int on_loan = 0;
+	char *total_str;
+	char *on_loan_str;
+	struct data *equip_data_ptr;
+	struct list_node *loan_node_ptr;
+	struct data *loan_data_ptr;
+	char *end;
 
-/* display the entire members list */
-BOOLEAN display_members(ETS_PTR ets_ptr)
-{
-	struct list_node *current = ets_ptr->mem.head;
-	struct data *data_ptr;
+	equip_data_ptr = (struct data *)equip_node_ptr->data;
+	total_str = (char *)equip_data_ptr->data3;
+	total = strtol(total_str, &end, 10);
 
-	display_headings("Member List", "ID", "Name", "# Lent",
-			 NULL);
-
-	while (current != NULL) {
-		int name_width;
-		data_ptr = (struct data *)current->data;
-		name_width = NAME_LEN - (strlen(data_ptr->data3) + 1);
-		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
-		printf("%s ", (char *)data_ptr->data3);
-		printf("%*s", -name_width, (char *)data_ptr->data2);
-		printf("%*d\n", -NUM_ITEMS_LEN,
-		       get_lent(current, &ets_ptr->loan));
-		current = current->next;
+	loan_node_ptr = loan_list->head;
+	if (loan_node_ptr == NULL) {
+		on_loan = 0;
+	} else {
+		while (loan_node_ptr != NULL) {
+			loan_data_ptr = (struct data*)loan_node_ptr->data;
+			if (strcmp(loan_data_ptr->data2, equip_data_ptr->data1)
+			    == 0) {
+				on_loan_str = (char *)loan_data_ptr->data3;
+				on_loan += strtol(on_loan_str, &end, 10);
+			}
+			loan_node_ptr = loan_node_ptr->next;
+		}
 	}
 
-	return FALSE;
+	avail = total - on_loan;
+
+	return avail;
 }
 
-/* display the entire loans list */
-BOOLEAN display_loans(ETS_PTR ets_ptr)
+/* get the number of items on loan for a struct list_node in the member list. */
+int get_lent(struct list_node *list_node_ptr, struct list *loan_list)
 {
-	struct list_node *current = ets_ptr->loan.head;
-	struct list_node *member_node_ptr = ets_ptr->mem.head;
-	struct data *data_ptr;
-	char full_name[NAME_LEN * 2] = "";
-	char equip_lines[NAME_LEN * 2] = "";
+	int lent = 0;
+	char *lent_str;
+	struct list_node *loan_node_ptr = loan_list->head;
+	struct data *mem_data_ptr;
+	struct data *loan_data_ptr;
+	char *end;
 
-	display_headings("Loan List", "ID", "Name", "# Lent",
-			 NULL);
+	mem_data_ptr = (struct data *)list_node_ptr->data;
+
+	while (loan_node_ptr != NULL) {
+		loan_data_ptr = (struct data *)loan_node_ptr->data;
+
+		if (strcmp((char *)loan_data_ptr->data1,
+			   (char *)mem_data_ptr->data1) == 0) {
+			lent_str = (char *)loan_data_ptr->data3;
+			lent += strtol(lent_str, &end, 10);
+		}
+
+		loan_node_ptr = loan_node_ptr->next;
+	}
+
+	return lent;
+}
+
+/* get equipment lines from loan list.
+ * using a member ID, search the entire loan list for that same ID. each time
+ * the ID is found, add to the provided string the equip id, the equip name,
+ * and number loaned. */
+void get_equip_lines(char *equip_lines, char *mem_id, struct list *loan_list,
+		     struct list *equip_list)
+{
+	struct list_node *current = loan_list->head;
+	struct data *data_ptr;
+	char equip_name[NAME_LEN] = "";
 
 	while (current != NULL) {
 		data_ptr = (struct data *)current->data;
-		printf("%*s", -ID_LEN, (char *)data_ptr->data1);
-		get_full_name(full_name, &ets_ptr->mem, data_ptr->data1);
-		printf("%*s ", -NAME_LEN, full_name);
-		memset(full_name, 0, strlen(full_name) + 1);
-		printf("%*d\n", -NUM_ITEMS_LEN,
-		       get_lent(current, &ets_ptr->loan));
-		printf("%*s", -ID-LEN + 1, equip_lines);
+
+		if (strcmp(data_ptr->data1,mem_id) == 0) {
+			strcat(equip_lines, "\t");
+			strcat(equip_lines, data_ptr->data2);
+			strcat(equip_lines, " ");
+			get_equip_name(equip_name, data_ptr->data2, equip_list);
+			strcat(equip_lines, equip_name);
+			memset(equip_name, 0, strlen(equip_name) + 1);
+			strcat(equip_lines, " x ");
+			strcat(equip_lines, data_ptr->data3);
+			strcat(equip_lines, "\n");
+
+		}
+
 		current = current->next;
 	}
-
-	return FALSE;
 }
 
-/* get equipment lines */
-void get_equip_lines(char *id, int lent, struct list *equip_list_ptr )
+/* get equipment name for a given equip id */
+void get_equip_name(char *equip_name, char *equip_id, struct list *equip_list)
 {
+	struct list_node *current = equip_list->head;
+	struct data *data_ptr;
 
+	while (current != NULL) {
+		data_ptr = (struct data *)current->data;
+		if (strcmp(data_ptr->data1, equip_id) == 0) {
+			strcpy(equip_name, data_ptr->data2);
+		}
+		current = current->next;
+	}
 }
 
 /* get a full name from the member list */
@@ -459,26 +545,35 @@ void get_full_name(char *full_name, struct list *mem_list, char *id)
 	strcat(full_name, last_name);
 }
 
+/* search a loan list by ID and return a pointer to the struct list_node */
+struct list_node * find_node_id(struct list *loan_list_ptr, char *id)
+{
+	struct list_node *current = loan_list_ptr->head;
+	struct data *data_ptr;
+
+	while (current != NULL) {
+		data_ptr = (struct data *)current->data;
+		if (strcmp((char *)data_ptr->data1, id) == 0
+		    || strcmp((char *)data_ptr->data2, id) == 0) {
+			break;
+		} else {
+			current = current->next;
+		}
+	}
+
+	if (current == NULL)
+		return NULL;
+	else
+		return current;
+}
+
+/* save data changes to file and exit program */
 BOOLEAN save_exit(ETS_PTR ets_ptr)
 {
         return TRUE;
 }
-BOOLEAN add_equipment(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
-BOOLEAN change_equipment(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
-BOOLEAN add_member(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
-BOOLEAN delete_member(ETS_PTR ets_ptr)
-{
-        return FALSE;
-}
+
+/* abort changes. don't save data to file, free memory and quit */
 BOOLEAN quit(ETS_PTR ets_ptr)
 {
         return TRUE;
