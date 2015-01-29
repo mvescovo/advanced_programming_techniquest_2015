@@ -256,8 +256,15 @@ int data1_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
 		((struct ets *)ets_ptr)->mem.head;
 	struct data *mem_data_ptr;
 
+	struct list_node *equip_ptr = (struct list_node *)
+		((struct ets *)ets_ptr)->equip.head;
+	struct data *equip_data_ptr;
+
 	char *mem_id1 = data_ptr1->data1;
 	char *mem_id2 = data_ptr2->data1;
+
+	char *equip_id1 = data_ptr1->data2;
+	char *equip_id2 = data_ptr2->data2;
 
 	char cmp_str1[CMP_STR_BUF] = "";
 	char cmp_str2[CMP_STR_BUF] = "";
@@ -282,6 +289,28 @@ int data1_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
 		}
 
 		mem_ptr = mem_ptr->next;
+	}
+
+	while (equip_ptr != NULL) {
+		equip_data_ptr = (struct data*)equip_ptr->data;
+		if (strcmp(equip_data_ptr->data1, equip_id1) == 0) {
+			strcat(cmp_str1, equip_data_ptr->data2);
+			break;
+		}
+
+		equip_ptr = equip_ptr->next;
+	}
+
+	equip_ptr = (struct list_node *)((struct ets *)ets_ptr)->equip.head;
+
+	while (equip_ptr != NULL) {
+		equip_data_ptr = (struct data*)equip_ptr->data;
+		if (strcmp(equip_data_ptr->data1, equip_id2) == 0) {
+			strcat(cmp_str2, equip_data_ptr->data2);
+			break;
+		}
+
+		equip_ptr = equip_ptr->next;
 	}
 
 	if (strcmp(cmp_str1, cmp_str2) < 0) {
