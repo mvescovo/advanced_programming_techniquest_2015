@@ -26,6 +26,7 @@
 #define MIN_ARRAY_HEIGHT 5
 #define MIN_ARRAY_WIDTH ID_LEN + 1
 #define EQUIP_LINE_INDENT ID_LEN + 4
+#define CMP_STR_BUF NAME_LEN * 2
 
 /* generic data structure */
 struct data {
@@ -44,6 +45,7 @@ struct list_node {
 struct list {
 	struct list_node *head;
 	int size;
+	int (*cmp)(const void*, const void*, const void*);
 };
 
 /* This is the ets structure you will pass to many functions */
@@ -54,14 +56,17 @@ struct ets
 	struct list loan;
 };
 
-ERROR load_list(struct list *list_ptr, const char *file);
-ERROR load_line(struct list *list_ptr, char *line);
+ERROR load_list(struct list *list_ptr, const char *file, struct ets *ets_ptr);
+ERROR load_line(struct list *list_ptr, char *line, struct ets *ets_ptr);
 ERROR load_tokens(struct data *data_ptr, char *line);
 struct list_node * create_list_node(void);
 struct data * create_data(void);
-void add_node(struct list_node **head_ptr_ptr, struct list_node *list_node_ptr);
-int cmp_nodes(struct list_node *list_node_ptr1,
-	      struct list_node *list_node_ptr2);
+void add_node(struct list *list_ptr, struct list_node *list_node_ptr,
+	      struct ets *ets_ptr);
+int data1_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
+	      const void* ets_ptr);
+int data2_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
+	      const void* ets_ptr);
 void destroy_list(struct list *list);
 void destroy_list_node(struct list_node *list_node);
 void destroy_data(struct data *data);
@@ -81,10 +86,13 @@ ETS_PTR create_ets(void)
 
 	ets_ptr->equip.head = NULL;
 	ets_ptr->equip.size = 0;
+	ets_ptr->equip.cmp = data2_cmp;
 	ets_ptr->mem.head = NULL;
 	ets_ptr->mem.size = 0;
+	ets_ptr->mem.cmp = data2_cmp;
 	ets_ptr->loan.head = NULL;
 	ets_ptr->loan.size = 0;
+	ets_ptr->loan.cmp = data1_cmp;
 
 	return ets_ptr;
 }
@@ -118,18 +126,18 @@ ERROR load_data(ETS_PTR ets_ptr,
 		  const char *member_fname,
 		  const char *loan_fname)
 {
-	if (load_list(&ets_ptr->equip, equip_fname) == FAIL)
+	if (load_list(&ets_ptr->equip, equip_fname, ets_ptr) == FAIL)
 		return FAIL;
-	else if (load_list(&ets_ptr->mem, member_fname) == FAIL)
+	else if (load_list(&ets_ptr->mem, member_fname, ets_ptr) == FAIL)
 		return FAIL;
-	else if (load_list(&ets_ptr->loan, loan_fname) == FAIL)
+	else if (load_list(&ets_ptr->loan, loan_fname, ets_ptr) == FAIL)
 		return FAIL;
 	else
 		return SUCCESS;
 }
 
 /* loads data from a file into a struct list, one line at a time */
-ERROR load_list(struct list *list_ptr, const char *file)
+ERROR load_list(struct list *list_ptr, const char *file, struct ets *ets_ptr)
 {
 	FILE *fp = fopen(file, "r");
 	char string[LINE_LEN];
@@ -137,7 +145,7 @@ ERROR load_list(struct list *list_ptr, const char *file)
 	memset(string, 0, LINE_LEN);
 
 	while (get_string(string, LINE_LEN, fp, NULL) == SUCCESS) {
-		load_line(list_ptr, string);
+		load_line(list_ptr, string, ets_ptr);
 		memset(string, 0, strlen(string + 1));
 	}
 
@@ -150,13 +158,13 @@ ERROR load_list(struct list *list_ptr, const char *file)
  * loads data from a line into a struct list_node, then adds the struct 
  * list_node to a list. creates a new struct list_node.
  */
-ERROR load_line(struct list *list_ptr, char *line)
+ERROR load_line(struct list *list_ptr, char *line, struct ets *ets_ptr)
 {
 	struct list_node *list_node_ptr = create_list_node();
 
 	load_tokens(list_node_ptr->data, line);
 
-	add_node(&list_ptr->head, list_node_ptr);
+	add_node(list_ptr, list_node_ptr, ets_ptr);
 	list_ptr->size++;
 
 	return SUCCESS;
@@ -180,24 +188,26 @@ ERROR load_tokens(struct data *data_ptr, char *line)
 	return SUCCESS;
 }
 
-/* adds a struct list_node to a struct list in sorted order using cmp_nodes. */
-void add_node(struct list_node **head_ptr_ptr, struct list_node *new_node_ptr)
+/* adds a struct list_node to a struct list in sorted order using data1_cmp. */
+void add_node(struct list *list_ptr, struct list_node *new_node_ptr,
+	      struct ets *ets_ptr)
 {
-	struct list_node *current_ptr = *head_ptr_ptr;
+	struct list_node *current_ptr = list_ptr->head;
 	struct list_node *previous_ptr = NULL;
+	int (*cmp)(const void*, const void*, const void*) = list_ptr->cmp;
 
 	if (current_ptr == NULL) {
-		*head_ptr_ptr = new_node_ptr;
+		list_ptr->head = new_node_ptr;
 	} else {
 		while (current_ptr != NULL
-		       && cmp_nodes(current_ptr, new_node_ptr) < 0) {
+		       && cmp(current_ptr, new_node_ptr, ets_ptr) < 0) {
 			previous_ptr = current_ptr;
 			current_ptr = current_ptr->next;
 		}
 
 		if (previous_ptr == NULL) {
-			new_node_ptr->next = *head_ptr_ptr;
-			*head_ptr_ptr = new_node_ptr;
+			new_node_ptr->next = list_ptr->head;
+			list_ptr->head = new_node_ptr;
 		} else {
 			new_node_ptr->next = current_ptr;
 			previous_ptr->next = new_node_ptr;
@@ -210,17 +220,73 @@ void add_node(struct list_node **head_ptr_ptr, struct list_node *new_node_ptr)
  * less than 0 for the first paramater being smaller, 0 for it being equal, or 1
  * for it being greater.
  */
-int cmp_nodes(struct list_node *list_node_ptr1,
-	      struct list_node *list_node_ptr2)
+int data2_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
+	      const void* ets_ptr)
 {
-	struct data *data_ptr1 = (struct data*)list_node_ptr1->data;
-	struct data *data_ptr2 = (struct data*)list_node_ptr2->data;
+	struct data *data_ptr1 = (struct data *)
+		((struct list_node *)list_node_ptr1)->data;
+	struct data *data_ptr2 = (struct data *)
+		((struct list_node *)list_node_ptr2)->data;
 	char *name1 = data_ptr1->data2;
 	char *name2 = data_ptr2->data2;
 
 	if (strcmp(name1, name2) < 0) {
 		return -1;
 	} else if (strcmp(name1, name2) == 0) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+/* 
+ * compares nodes based on the value of member last name, then equipment name.
+ * returns less than 0 for the first paramater being smaller, 0 for it being
+ * equal, or 1 for it being greater.
+ */
+int data1_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
+	      const void* ets_ptr)
+{
+	struct data *data_ptr1 = (struct data*)
+		((struct list_node *)list_node_ptr1)->data;
+	struct data *data_ptr2 = (struct data*)
+		((struct list_node *)list_node_ptr2)->data;
+
+	struct list_node *mem_ptr = (struct list_node *)
+		((struct ets *)ets_ptr)->mem.head;
+	struct data *mem_data_ptr;
+
+	char *mem_id1 = data_ptr1->data1;
+	char *mem_id2 = data_ptr2->data1;
+
+	char cmp_str1[CMP_STR_BUF] = "";
+	char cmp_str2[CMP_STR_BUF] = "";
+
+	while (mem_ptr != NULL) {
+		mem_data_ptr = (struct data*)mem_ptr->data;
+		if (strcmp(mem_data_ptr->data1, mem_id1) == 0) {
+			strcat(cmp_str1, mem_data_ptr->data2);
+			break;
+		}
+
+		mem_ptr = mem_ptr->next;
+	}
+
+	mem_ptr = (struct list_node *)((struct ets *)ets_ptr)->mem.head;
+
+	while (mem_ptr != NULL) {
+		mem_data_ptr = (struct data*)mem_ptr->data;
+		if (strcmp(mem_data_ptr->data1, mem_id2) == 0) {
+			strcat(cmp_str2, mem_data_ptr->data2);
+			break;
+		}
+
+		mem_ptr = mem_ptr->next;
+	}
+
+	if (strcmp(cmp_str1, cmp_str2) < 0) {
+		return -1;
+	} else if (strcmp(cmp_str1, cmp_str2) == 0) {
 		return 0;
 	} else {
 		return 1;
@@ -559,6 +625,7 @@ void get_full_name(char *full_name, struct list *mem_list, char *id)
 	}
 
 	strcpy(full_name, first_name);
+	strcat(full_name, " ");
 	strcat(full_name, last_name);
 }
 
