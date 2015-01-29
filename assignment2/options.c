@@ -78,6 +78,10 @@ void get_full_name(char *full_name, struct list *mem_list, char *id);
 void get_equip_line(char *equip_line, char *mem_id, struct list *loan_list,
 		     struct list *equip_list);
 void get_equip_name(char *equip_name, char *equip_id, struct list *equip_list);
+void get_mem_name(char *mem_name, char *mem_id, struct ets *ets_ptr);
+#if 0 /* dulicate function */
+void get_equip_name(char *mem_name, char *mem_id, struct ets *ets_ptr);
+#endif
 
 /* creates and initialises a new struct ets and returns a pointer */
 ETS_PTR create_ets(void)
@@ -251,67 +255,17 @@ int data1_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
 		((struct list_node *)list_node_ptr1)->data;
 	struct data *data_ptr2 = (struct data*)
 		((struct list_node *)list_node_ptr2)->data;
-
-	struct list_node *mem_ptr = (struct list_node *)
-		((struct ets *)ets_ptr)->mem.head;
-	struct data *mem_data_ptr;
-
-	struct list_node *equip_ptr = (struct list_node *)
-		((struct ets *)ets_ptr)->equip.head;
-	struct data *equip_data_ptr;
-
 	char *mem_id1 = data_ptr1->data1;
 	char *mem_id2 = data_ptr2->data1;
-
 	char *equip_id1 = data_ptr1->data2;
 	char *equip_id2 = data_ptr2->data2;
-
 	char cmp_str1[CMP_STR_BUF] = "";
 	char cmp_str2[CMP_STR_BUF] = "";
 
-	while (mem_ptr != NULL) {
-		mem_data_ptr = (struct data*)mem_ptr->data;
-		if (strcmp(mem_data_ptr->data1, mem_id1) == 0) {
-			strcat(cmp_str1, mem_data_ptr->data2);
-			break;
-		}
-
-		mem_ptr = mem_ptr->next;
-	}
-
-	mem_ptr = (struct list_node *)((struct ets *)ets_ptr)->mem.head;
-
-	while (mem_ptr != NULL) {
-		mem_data_ptr = (struct data*)mem_ptr->data;
-		if (strcmp(mem_data_ptr->data1, mem_id2) == 0) {
-			strcat(cmp_str2, mem_data_ptr->data2);
-			break;
-		}
-
-		mem_ptr = mem_ptr->next;
-	}
-
-	while (equip_ptr != NULL) {
-		equip_data_ptr = (struct data*)equip_ptr->data;
-		if (strcmp(equip_data_ptr->data1, equip_id1) == 0) {
-			strcat(cmp_str1, equip_data_ptr->data2);
-			break;
-		}
-
-		equip_ptr = equip_ptr->next;
-	}
-
-	equip_ptr = (struct list_node *)((struct ets *)ets_ptr)->equip.head;
-
-	while (equip_ptr != NULL) {
-		equip_data_ptr = (struct data*)equip_ptr->data;
-		if (strcmp(equip_data_ptr->data1, equip_id2) == 0) {
-			strcat(cmp_str2, equip_data_ptr->data2);
-			break;
-		}
-
-		equip_ptr = equip_ptr->next;
-	}
+	get_mem_name(cmp_str1, mem_id1, (struct ets *)ets_ptr);
+	get_mem_name(cmp_str2, mem_id2, (struct ets *)ets_ptr);
+	get_equip_name(cmp_str1, equip_id1, &((struct ets *)ets_ptr)->equip);
+	get_equip_name(cmp_str2, equip_id2, &((struct ets *)ets_ptr)->equip);
 
 	if (strcmp(cmp_str1, cmp_str2) < 0) {
 		return -1;
@@ -321,6 +275,44 @@ int data1_cmp(const void* list_node_ptr1, const void* list_node_ptr2,
 		return 1;
 	}
 }
+
+/* get a member name from a member id */
+void get_mem_name(char *mem_name, char *mem_id, struct ets *ets_ptr)
+{
+	struct list_node *mem_ptr = ets_ptr->mem.head;
+	struct data *mem_data_ptr;
+
+	while (mem_ptr != NULL) {
+		mem_data_ptr = (struct data*)mem_ptr->data;
+
+		if (strcmp(mem_data_ptr->data1, mem_id) == 0) {
+			strcat(mem_name, mem_data_ptr->data2);
+			break;
+		}
+
+		mem_ptr = mem_ptr->next;
+	}
+}
+
+#if 0 /* duplicate function */
+/* get equipment name from an equip id */
+void get_equip_name(char *equip_name, char *equip_id, struct ets *ets_ptr)
+{
+	struct list_node *equip_ptr = ets_ptr->equip.head;
+	struct data *equip_data_ptr;
+
+	while (equip_ptr != NULL) {
+		equip_data_ptr = (struct data*)equip_ptr->data;
+
+		if (strcmp(equip_data_ptr->data1, equip_id) == 0) {
+			strcat(equip_name, equip_data_ptr->data2);
+			break;
+		}
+
+		equip_ptr = equip_ptr->next;
+	}
+}
+#endif
 
 /* display the entire equipment list */
 BOOLEAN display_equipment(ETS_PTR ets_ptr)
@@ -627,7 +619,7 @@ void get_equip_name(char *equip_name, char *equip_id, struct list *equip_list)
 	while (current != NULL) {
 		data_ptr = (struct data *)current->data;
 		if (strcmp(data_ptr->data1, equip_id) == 0) {
-			strcpy(equip_name, data_ptr->data2);
+			strcat(equip_name, data_ptr->data2);
 		}
 		current = current->next;
 	}
