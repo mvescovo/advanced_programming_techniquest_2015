@@ -15,8 +15,14 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+typedef struct strings_array *STRINGS_ARRAY;
+
 void read_rest_of_line(void);
 ERROR get_string(char string[], int length, FILE *fp, char prompt[]);
 ERROR get_int(int *i, int min, int max, char prompt[]);
-
+STRINGS_ARRAY create_strings_array(void);
+void add_string(const char *string, STRINGS_ARRAY strings_array);
+const char * get_string_array(int index, STRINGS_ARRAY strings_array);
+void destroy_strings_array(STRINGS_ARRAY strings_array);
+int get_strings_array_size(STRINGS_ARRAY strings_array);
 #endif

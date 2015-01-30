@@ -21,6 +21,14 @@
 #define INT_BUF 10 /* size of buffer for get_int function */
 #define ID_LEN 5
 #define NAME_LEN 31
+#define MIN_ARRAY_HEIGHT 5
+#define MIN_ARRAY_WIDTH ID_LEN + 1
+
+struct strings_array {
+	char **array;
+	int size;
+	int used;
+};
 
 /* clears the input buffer. */
 void read_rest_of_line(void)
@@ -98,4 +106,59 @@ ERROR get_int(int *i, int min, int max, char prompt[])
 	} while (error == FAIL);
 
 	return error;
+}
+
+/* create a dynamic array holding strings and return a pointer */
+STRINGS_ARRAY create_strings_array(void)
+{
+	static struct strings_array strings_array;
+	int i;
+
+	strings_array.array = malloc(sizeof(char *) * MIN_ARRAY_HEIGHT);
+
+	for (i = 0; i < MIN_ARRAY_HEIGHT; ++i) {
+		strings_array.array[i] = calloc(MIN_ARRAY_WIDTH, sizeof(char));
+	}
+
+	strings_array.size = MIN_ARRAY_HEIGHT;
+	strings_array.used = 0;
+
+	return &strings_array;
+}
+
+/* add a string to a struct strings_array */
+void add_string(const char *string, STRINGS_ARRAY strings_array)
+{
+	if (strings_array->used == strings_array->size) {
+		((struct strings_array *)strings_array)->array =
+			realloc(((struct strings_array *)strings_array)->array,
+				sizeof(char *) * strings_array->size * 2);
+		((struct strings_array *)strings_array)->size *= 2;
+	}
+
+	strcpy(strings_array->array[strings_array->used], string);
+	strings_array->used++;
+}
+
+/* get a string pointer for a STRINGS_ARRAY */
+const char * get_string_array(int index, STRINGS_ARRAY strings_array)
+{
+	return  strings_array->array[index];
+}
+
+/* destroy a STRINGS_ARRAY */
+void destroy_strings_array(STRINGS_ARRAY strings_array)
+{
+	int i;
+
+	for (i = 0; i < strings_array->size; ++i)
+		free(strings_array->array[i]);
+
+	free(strings_array->array);
+}
+
+/* get the number of strings store in a STRINGS_ARRAY */
+int get_strings_array_size(STRINGS_ARRAY strings_array)
+{
+	return strings_array->used;
 }

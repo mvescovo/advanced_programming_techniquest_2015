@@ -23,8 +23,6 @@
 #define ID_LEN 8
 #define NAME_LEN 31
 #define NUM_ITEMS_LEN 6
-#define MIN_ARRAY_HEIGHT 5
-#define MIN_ARRAY_WIDTH ID_LEN + 1
 #define EQUIP_LINE_INDENT ID_LEN + 4
 #define CMP_STR_BUF NAME_LEN * 2
 
@@ -72,6 +70,8 @@ void destroy_list_node(struct list_node *list_node);
 void destroy_data(struct data *data);
 void display_headings(char *heading, char *title1, char *title2,
 		      char *title3, char *title4);
+void display_heading(char *heading);
+void display_titles(char *title1, char *title2, char *title3, char *title4);
 int get_avail(struct list_node *list_node_ptr, struct list *loan_list);
 int get_lent(struct list_node *list_node_ptr, struct list *loan_list);
 void get_full_name(char *full_name, struct list *mem_list, char *id);
@@ -79,6 +79,10 @@ void get_equip_line(char *equip_line, char *mem_id, struct list *loan_list,
 		     struct list *equip_list);
 void get_equip_name(char *equip_name, char *equip_id, struct list *equip_list);
 void get_mem_name(char *mem_name, char *mem_id, struct ets *ets_ptr);
+BOOLEAN find_match(char *mem_id, STRINGS_ARRAY strings_array);
+void display_input_heading(char *heading);
+BOOLEAN display_loan(struct list_node *loan_node_ptr, ETS_PTR ets_ptr);
+struct list_node * get_node_from_id(char *id, struct list *list_ptr);
 #if 0 /* dulicate function */
 void get_equip_name(char *mem_name, char *mem_id, struct ets *ets_ptr);
 #endif
@@ -361,22 +365,17 @@ BOOLEAN display_members(ETS_PTR ets_ptr)
 	return FALSE;
 }
 
-/* display the entire loans list */
+/* 
+ * display the entire loans list sorted by member name and then by equipment
+ * name. check each node's member id to see if it's already been checked. if
+ * not then display the member details and then go through the entire list again
+ * for each time that member id appears and print the equipment details.
+ */
 BOOLEAN display_loans(ETS_PTR ets_ptr)
 {
 	struct list_node *current_ptr = ets_ptr->loan.head;
 	struct data *data_ptr;
-	char full_name[NAME_LEN * 2] = "";
-	char equip_line[LINE_LEN * 2] = "";
-	char **id_done = malloc(sizeof(char *) * MIN_ARRAY_HEIGHT);
-	int i;
-	BOOLEAN match_found = FALSE;
-
-	for (i = 0; i < MIN_ARRAY_HEIGHT; ++i) {
-		id_done[i] = malloc(sizeof(char) * MIN_ARRAY_WIDTH);
-		memset(id_done[i], 0, sizeof(char) * MIN_ARRAY_WIDTH);
-	}
-
+	STRINGS_ARRAY id_done = create_strings_array();
 
 	display_headings("Loan List", "ID", "Name", "# Lent",
 			 NULL);
@@ -384,42 +383,52 @@ BOOLEAN display_loans(ETS_PTR ets_ptr)
 	while (current_ptr != NULL) {
 		data_ptr = (struct data *)current_ptr->data;
 
-		for (i = 0; i < MIN_ARRAY_HEIGHT; ++i) {
-			if (strcmp(id_done[i], data_ptr->data1) == 0) {
-				match_found = TRUE;
-				break;
-			}
+		if (find_match(data_ptr->data1, id_done) == FALSE) {
+			add_string(data_ptr->data1, id_done);
+			display_loan(current_ptr, ets_ptr);
 		}
 
-		if (match_found == FALSE) {
-			for (i = 0; i < MIN_ARRAY_HEIGHT; ++i) {
-				if (id_done[i][0] != 'M') {
-					strcpy(id_done[i], data_ptr->data1);
-					break;
-				}
-			}
-
-			printf("%*s", -ID_LEN, (char *)data_ptr->data1);
-			get_full_name(full_name, &ets_ptr->mem,
-				      data_ptr->data1);
-			printf("%*s", -NAME_LEN, full_name);
-			memset(full_name, 0, strlen(full_name) + 1);
-			printf("%*d\n", -NUM_ITEMS_LEN,
-			       get_lent(current_ptr, &ets_ptr->loan));
-			get_equip_line(equip_line, data_ptr->data1,
-					&ets_ptr->loan, &ets_ptr->equip);
-			printf("%s", equip_line);
-			memset(equip_line, 0, strlen(equip_line) + 1);
-		}
-
-		match_found = FALSE;
 		current_ptr = current_ptr->next;
 	}
 
-	for (i = 0; i < MIN_ARRAY_HEIGHT; ++i) {
-		free(id_done[i]);
+	destroy_strings_array(id_done);
+
+	return FALSE;
+}
+
+/* 
+ * display the details of one loan, sorted by member last name, then by
+ * equipment name
+ */
+BOOLEAN display_loan(struct list_node *loan_node_ptr, ETS_PTR ets_ptr)
+{
+	struct data *data_ptr = (struct data *)loan_node_ptr->data;
+	char full_name[NAME_LEN * 2] = "";
+	char equip_line[LINE_LEN * 2] = "";
+
+	printf("%*s", -ID_LEN, (char *)data_ptr->data1);
+	get_full_name(full_name, &ets_ptr->mem, data_ptr->data1);
+	printf("%*s", -NAME_LEN, full_name);
+	memset(full_name, 0, strlen(full_name) + 1);
+	printf("%*d\n", -NUM_ITEMS_LEN,
+	       get_lent(loan_node_ptr, &ets_ptr->loan));
+	get_equip_line(equip_line, data_ptr->data1, &ets_ptr->loan,
+		       &ets_ptr->equip);
+	printf("%s", equip_line);
+	memset(equip_line, 0, strlen(equip_line) + 1);
+
+	return FALSE;
+}
+
+/* find mem_id in a STRINGS_ARRAY. */
+BOOLEAN find_match(char *mem_id, STRINGS_ARRAY strings_array)
+{
+	int i;
+
+	for (i = 0; i < get_strings_array_size(strings_array); ++i) {
+		if (strcmp(get_string_array(i, strings_array), mem_id) == 0)
+			return TRUE;
 	}
-	free(id_done);
 
 	return FALSE;
 }
@@ -427,12 +436,29 @@ BOOLEAN display_loans(ETS_PTR ets_ptr)
 /* display the loan details for a member id */
 BOOLEAN query_member(ETS_PTR ets_ptr)
 {
+	char mem_id[ID_LEN + 1];
+	struct list_node *mem_node_ptr;
+
+	display_heading("Query Member ID");
+	get_string(mem_id, ID_LEN, stdin, "Please enter the member ID: ");
+	mem_node_ptr = get_node_from_id(mem_id, &ets_ptr->loan);
+	display_titles("ID", "Name", "# Lent", NULL);
+	display_loan(mem_node_ptr, ets_ptr);
+
 	return FALSE;
 }
 
 /* display the member details for an equip id */
 BOOLEAN query_equipment(ETS_PTR ets_ptr)
 {
+	char equip_id[ID_LEN + 1];
+	struct list_node *equip_node_ptr;
+
+	display_heading("Query Equipment ID");
+	get_string(equip_id, ID_LEN, stdin, "Please enter the equipment ID: ");
+	equip_node_ptr = get_node_from_id(equip_id, &ets_ptr->equip);
+	display_titles("ID", "Name", "# Lent", NULL);
+
         return FALSE;
 }
 
@@ -476,17 +502,31 @@ BOOLEAN delete_member(ETS_PTR ets_ptr)
 }
 
 /* display list headings */
-void display_headings(char *heading, char *title1, char *title2,
-		      char *title3, char *title4)
+void display_headings(char *heading, char *title1, char *title2, char *title3,
+		      char *title4)
+{
+	display_heading(heading);
+	display_titles(title1, title2, title3, title4);
+}
+
+/* display input headings */
+void display_heading(char *heading)
 {
 	int i;
-	int num_dashes = 0;
 
 	putchar('\n');
 	puts(heading);
 	for (i = 0; i < strlen(heading); ++i)
 		putchar('-');
 	putchar('\n');
+}
+
+/* display input headings */
+void display_titles(char *title1, char *title2, char *title3, char *title4)
+{
+	int i;
+	int num_dashes = 0;
+
 	if (title1 != NULL) {
 		printf("%*s", -ID_LEN, title1);
 		num_dashes += ID_LEN;
@@ -648,6 +688,24 @@ void get_full_name(char *full_name, struct list *mem_list, char *id)
 	strcpy(full_name, first_name);
 	strcat(full_name, " ");
 	strcat(full_name, last_name);
+}
+
+/* get a node ptr from an id */
+struct list_node * get_node_from_id(char *id, struct list *list_ptr)
+{
+	struct list_node *current_ptr = list_ptr->head;
+	struct data *data_ptr;
+
+	while (current_ptr != NULL) {
+		data_ptr = (struct data *)current_ptr->data;
+
+		if (strcmp(data_ptr->data1, id) == 0)
+			return current_ptr;
+
+		current_ptr = current_ptr->next;
+	}
+
+	return NULL;
 }
 
 /* save data changes to file and exit program */
