@@ -111,54 +111,57 @@ ERROR get_int(int *i, int min, int max, char prompt[])
 /* create a dynamic array holding strings and return a pointer */
 STRINGS_ARRAY create_strings_array(void)
 {
-	static struct strings_array strings_array;
+	STRINGS_ARRAY strings_array_ptr = malloc(sizeof(struct strings_array));
 	int i;
 
-	strings_array.array = malloc(sizeof(char *) * MIN_ARRAY_HEIGHT);
+	strings_array_ptr->array = malloc(sizeof(char *) * MIN_ARRAY_HEIGHT);
 
 	for (i = 0; i < MIN_ARRAY_HEIGHT; ++i) {
-		strings_array.array[i] = calloc(MIN_ARRAY_WIDTH, sizeof(char));
+		strings_array_ptr->array[i] = calloc(MIN_ARRAY_WIDTH,
+						     sizeof(char));
 	}
 
-	strings_array.size = MIN_ARRAY_HEIGHT;
-	strings_array.used = 0;
+	strings_array_ptr->size = MIN_ARRAY_HEIGHT;
+	strings_array_ptr->used = 0;
 
-	return &strings_array;
+	return strings_array_ptr;
 }
 
 /* add a string to a struct strings_array */
-void add_string(const char *string, STRINGS_ARRAY strings_array)
+void add_string(const char *string, STRINGS_ARRAY strings_array_ptr)
 {
-	if (strings_array->used == strings_array->size) {
-		((struct strings_array *)strings_array)->array =
-			realloc(((struct strings_array *)strings_array)->array,
-				sizeof(char *) * strings_array->size * 2);
-		((struct strings_array *)strings_array)->size *= 2;
+	if (strings_array_ptr->used == strings_array_ptr->size) {
+		((struct strings_array *)strings_array_ptr)->array
+			= realloc(((struct strings_array *)strings_array_ptr)
+				  ->array, sizeof(char *)
+				  * strings_array_ptr->size * 2);
+		((struct strings_array *)strings_array_ptr)->size *= 2;
 	}
 
-	strcpy(strings_array->array[strings_array->used], string);
-	strings_array->used++;
+	strcpy(strings_array_ptr->array[strings_array_ptr->used], string);
+	strings_array_ptr->used++;
 }
 
 /* get a string pointer for a STRINGS_ARRAY */
-const char * get_string_array(int index, STRINGS_ARRAY strings_array)
+const char * get_string_array(int index, STRINGS_ARRAY strings_array_ptr)
 {
-	return  strings_array->array[index];
+	return  strings_array_ptr->array[index];
 }
 
 /* destroy a STRINGS_ARRAY */
-void destroy_strings_array(STRINGS_ARRAY strings_array)
+void destroy_strings_array(STRINGS_ARRAY strings_array_ptr)
 {
 	int i;
 
-	for (i = 0; i < strings_array->size; ++i)
-		free(strings_array->array[i]);
+	for (i = 0; i < strings_array_ptr->size; ++i)
+		free(strings_array_ptr->array[i]);
 
-	free(strings_array->array);
+	free(strings_array_ptr->array);
+	free(strings_array_ptr);
 }
 
 /* get the number of strings store in a STRINGS_ARRAY */
-int get_strings_array_size(STRINGS_ARRAY strings_array)
+int get_strings_array_size(STRINGS_ARRAY strings_array_ptr)
 {
-	return strings_array->used;
+	return strings_array_ptr->used;
 }
