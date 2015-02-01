@@ -75,6 +75,21 @@ ERROR get_string(char string[], int length, FILE *fp, char prompt[])
 	return error;
 }
 
+/* */
+ERROR get_field_string(char string[], int length, char prompt[])
+{
+	ERROR error = SUCCESS;
+
+	if (get_string(string, BUF, stdin, prompt) == CTRL_D) {
+		putchar('\n');
+		error = FAIL;
+	} else if (string[0] == '\0') {
+		error = FAIL;
+	}
+
+	return error;
+}
+
 /* 
  * gets an int from the user between min and max inclusive. uses the get_string
  * function to get a valid string of size INT_BUF, then checks the string for an
@@ -88,15 +103,16 @@ ERROR get_int(int *i, int min, int max, char prompt[])
 
 	do {
 		if (get_string(string, INT_BUF, stdin, prompt) == CTRL_D) {
-			error = CTRL_D;
+			error = FAIL;
+			putchar('\n');
 			break;
 		}
 
 		*i = (int)strtol(string, &end, 10);
 
 		if ((end == string) || (*end != '\0')) {
-			puts("Invalid selection - not a number.");
 			error = FAIL;
+			break;
 		} else if ((*i < min) || (*i > max)) {
 			puts("Invalid selection.");
 			error = FAIL;
@@ -128,7 +144,7 @@ STRINGS_ARRAY create_strings_array(void)
 }
 
 /* add a string to a struct strings_array */
-void add_string(const char *string, STRINGS_ARRAY strings_array_ptr)
+void add_string(STRINGS_ARRAY strings_array_ptr, const char *string)
 {
 	if (strings_array_ptr->used == strings_array_ptr->size) {
 		((struct strings_array *)strings_array_ptr)->array
@@ -164,4 +180,14 @@ void destroy_strings_array(STRINGS_ARRAY strings_array_ptr)
 int get_strings_array_size(STRINGS_ARRAY strings_array_ptr)
 {
 	return strings_array_ptr->used;
+}
+
+/* set indent string. */
+void set_indent(char indent[], int size)
+{
+	int i;
+
+	for (i = 0; i < size - 1; ++i)
+		indent[i] = ' ';
+	indent[size - 1] = '\0';
 }

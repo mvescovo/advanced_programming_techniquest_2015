@@ -81,7 +81,10 @@ int get_selection(void)
 
 	do {
 		if (get_int(&selection, MIN_MENU_OPT, NUM_MENU_ITEMS,
-			 "\nSelect option (1-13): ") == CTRL_D) {
+			 "\nSelect option (1-13): ") == FAIL) {
+			puts("\nNothing entered.");
+			error = FAIL;
+		} else if (selection == '\0') {
 			puts("\nNothing entered.");
 			error = FAIL;
 		} else {
